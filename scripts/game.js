@@ -1,9 +1,9 @@
-require(["fabric.min", "model"], function(dep1, dep2) {
-    console.log(dep1);
-    Window.fabric = dep1;
-    Window.model = dep2;
-    game();
-});
+Window.onload = require(["fabric.min", "model"],
+			function(dep1, dep2) {
+			    Window.fabric = dep1;
+			    Window.model = dep2;
+			    game();
+			});
 
 function game() { 
     initialize();
