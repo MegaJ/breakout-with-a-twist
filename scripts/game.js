@@ -1,5 +1,8 @@
-require(["fabric.min"], function(dependency) {
-    Window.fabric = dependency;
+require(["fabric.min", "model"], function(dep1, dep2) {
+    console.log(dep1);
+    Window.fabric = dep1;
+    Window.model = dep2;
+    game();
 });
 
 function game() { 
@@ -26,6 +29,18 @@ function initialize() {
 	}
     });
 
+    for (var i = 0; i < 5; i++) {
+    	canvas.add(new fabric.Rect({
+    	    left: 20*i + 100,
+    	    top: 20*i + 100,
+    	    fill: 'red',
+    	    width: 20,
+    	    get height() {
+    		return this.width * 1.5;
+    	    }
+    	}));
+    };
+
     // "add" rectangle onto canvas
     canvas.add(rect);
 
@@ -49,4 +64,5 @@ function update() {
 function render() {
 
 }
-window.onload = game;
+
+//window.onload = game;
