@@ -42,12 +42,12 @@ var initialize = function () {
      // create a wrapper around native canvas element (with id="c")
     canvas = new fabric.Canvas('game');
     Window.canvas = canvas;
-    canvas.backgroundColor = "black";
+    canvas.backgroundColor = "seashell";
     var canvasWidth = canvas.getWidth();
     var canvasHeight = canvas.getHeight();
     console.log("width: " + canvasWidth + " height: " + canvasHeight);
 
-    makeRowOfBlocks(100);
+    makeArrayOfBlocks();
     makeBall();
     makePaddle(canvasWidth/2, canvasHeight/2,
 	       PADDLE_LENGTH, PADDLE_WIDTH, 45);
@@ -103,7 +103,8 @@ var makePaddle = function (x, y, length, width, angle) {
     ], {
 	stroke: 'blue',
 	fill: 'rgba(0,0,255,0.75)',
-	strokeWidth: 3
+	strokeWidth: 3,
+	transformMatrix: [1,0,  0,1,  0,0]
     });
     Window.paddle = paddle;
 
@@ -119,10 +120,16 @@ var makeRowOfBlocks = function(verticalSpace) {
     	    fill: 'red',
     	    width: 30,
     	    get height() {
-    		return this.width * 0.75;
+    		return this.width * 0.5;
     	    }
     	}));
     };
+}
+
+var makeArrayOfBlocks = function(){
+    for (var i = 1; i <= 5; i++) {
+	makeRowOfBlocks(i*30)
+    }
 }
 
 var processInput = function() {
@@ -137,22 +144,27 @@ var render = function() {
     canvas.renderAll();
 }
 
+var previousMouseCoord = {x: 0, y: 0};
 var addListeners = function() {
     canvas.on('mouse:move', function(evt) {
-	var mouseCoords = getMouseCoords(evt);
-
+	var currentMouseCoords = getMouseCoords(evt);
+	var dx = currentMouseCoords.x - previousMouseCoord.x;
+	var dy = currentMouseCoords.y - previousMouseCoord.y;
 	// example of matrix multiplication
-	var translate = [1, 0,  0, 1,  30, 30];
-	var translate2 = [1, 0,  0, 1,  100, 100];
-	var translateSum = fabric.util.multiplyTransformMatrices(translate, translate2);
+	var translate = [1, 0, 0, 1, dx, dy];
+	var newTranslate = fabric.util.multiplyTransformMatrices(
+	    Window.paddle.transformMatrix, translate);
+	Window.paddle.set({transformMatrix: newTranslate});
 	
 	console.log(paddle.setCoords());
-	console.log("Mouse: x: " + mouseCoords.x +
-		    " y: " + mouseCoords.y);
+	console.log("Mouse: x: " + currentMouseCoords.x +
+		    " y: " + currentMouseCoords.y);
+	
+	previousMouseCoord = currentMouseCoords;
     }, false);    
 }
 
-var getMousePos = function(event) {
+var getMouseCoords = function(event) {
     var pointer = canvas.getPointer(event.e);
     return {
 	x: pointer.x,
