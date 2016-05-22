@@ -11,6 +11,11 @@ Window.onload = require(["fabric.min", "math", "model"],
 // for 60 frames a second
 var MS_PER_UPDATE = 1000 / 60;
 
+// for now I don't want these dynamically changed
+var BALL_RADIUS = 15;
+var PADDLE_LENGTH = 80;
+var PADDLE_WIDTH = 20;
+
 // game runs at a series of fixed time steps
 function game() {    
     var previous = new Date().getTime();
@@ -42,39 +47,15 @@ function initialize() {
     var canvasHeight = canvas.getHeight();
     console.log("width: " + canvasWidth + " height: " + canvasHeight);
 
-    // create a rectangle object
-    var rect = new fabric.Rect({
-	left: 100,
-	top: 100,
-	fill: 'red',
-	width: 20,
-	get height() {
-	    return this.width * 1.5;
-	}
-    });
-
-    for (var i = 0; i < 5; i++) {
-    	canvas.add(new fabric.Rect({
-    	    left: 50*i + 100,
-    	    top: 100,
-    	    fill: 'red',
-    	    width: 20,
-    	    get height() {
-    		return this.width * 1.5;
-    	    }
-    	}));
-    };
-
+    makeRowOfBlocks(100);
     makeBall();
-    var paddleLength = 80;
-    var paddleWidth = 20;
-    createPaddle(canvasWidth/2, canvasHeight/2,
-		 paddleLength, paddleWidth, 45);
+    makePaddle(canvasWidth/2, canvasHeight/2,
+	       PADDLE_LENGTH, PADDLE_WIDTH, 45);
 }
 
 var makeBall = function (){
     Window.ball = ball = new fabric.Circle({
-	radius: 20,
+	radius: BALL_RADIUS,
 	fill: 'green'
     });
     canvas.add(ball);
@@ -83,7 +64,7 @@ var makeBall = function (){
     console.log(ball);
 }
 
-function createPaddle(x, y, length, width, angle) {
+var makePaddle = function (x, y, length, width, angle) {
     //angle = angle * (Math.PI/180); // convert to radians
     
     var theta = 90 - angle;
@@ -128,6 +109,20 @@ function createPaddle(x, y, length, width, angle) {
 
     //console.log(paddle.)
     canvas.add(paddle);
+}
+
+var makeRowOfBlocks = function(verticalSpace) {
+    for (var i = 0; i < 5; i++) {
+    	canvas.add(new fabric.Rect({
+    	    left: 50*i + 100,
+    	    top: verticalSpace,
+    	    fill: 'red',
+    	    width: 30,
+    	    get height() {
+    		return this.width * 0.75;
+    	    }
+    	}));
+    };
 }
 
 function processInput() {
