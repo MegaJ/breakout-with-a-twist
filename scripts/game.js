@@ -3,16 +3,34 @@ Window.onload = require(["fabric.min", "math", "model"],
 			    Window.fabric = fabric;
 			    Window.math = math = mathjs;
 			    Window.model = model;
+			    initialize();
+			    addListeners();
 			    game();
 			});
 
-function game() { 
-    initialize();
-    // while (true) {
-	processInput();
+// for 60 frames a second
+var MS_PER_UPDATE = 1000 / 60;
+
+// game runs at a series of fixed time steps
+function game() {    
+    var previous = new Date().getTime();
+    var lag = 0.0;
+    
+    var current = new Date().getTime();
+    var elapsed = current - previous;
+    previous = current;
+    lag += elapsed;
+    
+    processInput();
+
+    while (lag >= MS_PER_UPDATE) {
 	update();
-	render();
-    //}
+	lag -= MS_PER_UPDATE;
+    }
+
+    render(lag / MS_PER_UPDATE);
+    
+    requestAnimationFrame(game);
 }
 
 function initialize() {
@@ -58,7 +76,7 @@ function initialize() {
     canvas.add(circle);
 
     //renderPolygon();
-    var paddleLength = 30;
+    var paddleLength = 80;
     var paddleWidth = 20;
     createPaddle(canvasWidth/2, canvasHeight/2,
 		 paddleLength, paddleWidth, 45);
@@ -84,12 +102,15 @@ function createPaddle(x, y, length, width, angle) {
     Window.line = line;
 
     var offsetPoint = {x: x, y: pivot.y - width};
-    
+    var left_side_top = {}
     line2 =  new fabric.Line([offsetPoint.x, offsetPoint.y,
 			    right_side_top.x, right_side_top.y], {
-	fill: 'green',
-	stroke: 'green'
-    }); 
+	fill: 'red',
+	stroke: 'red'
+			    });
+    canvas.add(line2);
+    Window.line2 = line2;
+    
     
     paddle =  new fabric.Polygon([
 	{ x: 10, y: 10 },
@@ -114,10 +135,34 @@ function processInput() {
     
 }
 
-function update() {
+function update(elapsed) {
 
 }
 
 function render() {
 
+}
+
+// function getMousePos(canvas, evt) {
+//     var rect = canvas.getBoundingClientRect();
+//     return {
+//         x: evt.clientX - rect.left,
+//         y: evt.clientY - rect.top
+//     };
+// }
+
+function addListeners() {
+    canvas.on('mouse:move', function(evt) {
+	getMouseCoords(evt);
+	// do logic here with the mouse position
+    }, false);
+    
+}
+
+function getMouseCoords(event)
+{
+  var pointer = canvas.getPointer(event.e);
+  var posX = pointer.x;
+  var posY = pointer.y;
+  console.log(posX+", "+posY);    // Log to console
 }
