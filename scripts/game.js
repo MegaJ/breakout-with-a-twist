@@ -55,7 +55,7 @@ function initialize() {
 
     for (var i = 0; i < 5; i++) {
     	canvas.add(new fabric.Rect({
-    	    left: 20*i + 100,
+    	    left: 50*i + 100,
     	    top: 100,
     	    fill: 'red',
     	    width: 20,
@@ -65,22 +65,22 @@ function initialize() {
     	}));
     };
 
-    // "add" rectangle onto canvas
-    canvas.add(rect);
-
-    rect.set({ left: 20, top: 50 });
-
-    var circle = new fabric.Circle({
-	radius: 20, fill: 'green', left: 100, top: 100
-    });
-    canvas.add(circle);
-
-    //renderPolygon();
+    makeBall();
     var paddleLength = 80;
     var paddleWidth = 20;
     createPaddle(canvasWidth/2, canvasHeight/2,
 		 paddleLength, paddleWidth, 45);
-    canvas.renderAll();
+}
+
+var makeBall = function (){
+    Window.ball = ball = new fabric.Circle({
+	radius: 20,
+	fill: 'green'
+    });
+    canvas.add(ball);
+    ball.center()
+	.setCoords();
+    console.log(ball);
 }
 
 function createPaddle(x, y, length, width, angle) {
@@ -123,8 +123,7 @@ function createPaddle(x, y, length, width, angle) {
 	stroke: 'blue',
 	fill: 'rgba(0,0,255,0.75)',
 	strokeWidth: 3
-	
-    }).setAngle(30);
+    });
     Window.paddle = paddle;
 
     //console.log(paddle.)
@@ -140,29 +139,28 @@ function update(elapsed) {
 }
 
 function render() {
-
+    canvas.renderAll();
 }
-
-// function getMousePos(canvas, evt) {
-//     var rect = canvas.getBoundingClientRect();
-//     return {
-//         x: evt.clientX - rect.left,
-//         y: evt.clientY - rect.top
-//     };
-// }
 
 function addListeners() {
     canvas.on('mouse:move', function(evt) {
-	getMouseCoords(evt);
-	// do logic here with the mouse position
-    }, false);
-    
+	var mouseCoords = getMouseCoords(evt);
+
+	// example of matrix multiplication
+	var translate = [1, 0,  0, 1,  30, 30];
+	var translate2 = [1, 0,  0, 1,  100, 100];
+	var translateSum = fabric.util.multiplyTransformMatrices(translate, translate2);
+	
+	console.log(paddle.setCoords());
+	console.log("Mouse: x: " + mouseCoords.x +
+		    " y: " + mouseCoords.y);
+    }, false);    
 }
 
-function getMouseCoords(event)
-{
-  var pointer = canvas.getPointer(event.e);
-  var posX = pointer.x;
-  var posY = pointer.y;
-  console.log(posX+", "+posY);    // Log to console
+function getMouseCoords(event) {
+    var pointer = canvas.getPointer(event.e);
+    return {
+	x: pointer.x,
+	y: pointer.y
+    }; 
 }
