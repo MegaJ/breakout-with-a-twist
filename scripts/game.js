@@ -17,7 +17,7 @@ var PADDLE_LENGTH = 80;
 var PADDLE_WIDTH = 20;
 
 // game runs at a series of fixed time steps
-function game() {    
+var game = function () {    
     var previous = new Date().getTime();
     var lag = 0.0;
     
@@ -38,7 +38,7 @@ function game() {
     requestAnimationFrame(game);
 }
 
-function initialize() {
+var initialize = function () {
      // create a wrapper around native canvas element (with id="c")
     canvas = new fabric.Canvas('game');
     Window.canvas = canvas;
@@ -125,19 +125,19 @@ var makeRowOfBlocks = function(verticalSpace) {
     };
 }
 
-function processInput() {
+var processInput = function() {
     
 }
 
-function update(elapsed) {
+var update = function(elapsed) {
 
 }
 
-function render() {
+var render = function() {
     canvas.renderAll();
 }
 
-function addListeners() {
+var addListeners = function() {
     canvas.on('mouse:move', function(evt) {
 	var mouseCoords = getMouseCoords(evt);
 
@@ -152,7 +152,7 @@ function addListeners() {
     }, false);    
 }
 
-function getMouseCoords(event) {
+var getMousePos = function(event) {
     var pointer = canvas.getPointer(event.e);
     return {
 	x: pointer.x,
