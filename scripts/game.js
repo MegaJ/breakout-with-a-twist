@@ -48,7 +48,7 @@ var initialize = function () {
 
     makeArrayOfBlocks();
     makeBall();
-    makePaddle(PADDLE_LENGTH, PADDLE_WIDTH, 100);
+    makePaddle(PADDLE_LENGTH, PADDLE_WIDTH, 90);
 }
 
 var makeBall = function (){
@@ -59,6 +59,9 @@ var makeBall = function (){
     canvas.add(ball);
     ball.center()
 	.setCoords();
+
+    ball.velocity = {dx: 5, dy: 5};
+    ball.set({transformMatrix: [1, 0,  0, 1,  5, 5]});
     console.log(ball);
 }
 
@@ -69,13 +72,13 @@ var makePaddle = function (length, width, angle) {
     // canvas coordinate system is 0,0 for top left corner
     var right_side_top = {x: 0 + length * math.cos(math.unit(theta, 'deg')),
 			  y: 0 - length * math.sin(math.unit(theta, 'deg'))}
-    //console.log(right_side_top)
+    
     line = new fabric.Line([pivot.x, pivot.y,
 			    right_side_top.x, right_side_top.y], {
 	fill: 'black',
 	stroke: 'black'
     });
-    canvas.add(line);
+    //canvas.add(line);
     Window.line = line;
 
     var sideA = width;
@@ -96,7 +99,7 @@ var makePaddle = function (length, width, angle) {
 	fill: 'red',
 	stroke: 'red'
 			    });
-    canvas.add(line2);
+    //canvas.add(line2);
     Window.line2 = line2;
 
     // vector_s is a reflection of vector_v
@@ -110,7 +113,7 @@ var makePaddle = function (length, width, angle) {
 	fill: 'orange',
 	stroke: 'orange'
 			    });
-    canvas.add(line3);
+    //canvas.add(line3);
     Window.line2 = line3;
 
     var vector_t = {x: -1*(right_side_top.x - 0),
@@ -123,8 +126,14 @@ var makePaddle = function (length, width, angle) {
 	fill: 'grey',
 	stroke: 'grey'
 			    });
-    canvas.add(line4);
+    //canvas.add(line4);
     Window.line2 = line4;
+
+    paddle2 = new fabric.Group([line, line2, line3, line4], {
+	transformMatrix: [1,0,  0,1,  0,0]
+    });
+    Window.paddle2 = paddle2;
+    canvas.add(paddle2);
 
     paddle =  new fabric.Polygon([
 	pivot,
@@ -207,8 +216,8 @@ var addListeners = function() {
 	// example of matrix multiplication
 	var translate = [1, 0, 0, 1, dx, dy];
 	var newTranslate = fabric.util.multiplyTransformMatrices(
-	    Window.paddle.transformMatrix, translate);
-	Window.paddle.set({transformMatrix: newTranslate});
+	    Window.paddle2.transformMatrix, translate);
+	Window.paddle2.set({transformMatrix: newTranslate});
 	
 	//console.log(paddle.setCoords());
 	//console.log("Mouse: x: " + currentMouseCoords.x +
