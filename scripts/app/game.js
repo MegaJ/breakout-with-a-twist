@@ -198,7 +198,11 @@ var render = function() {
 
 var previousMouseCoord = {x: 0, y: 0};
 var addListeners = function() {
-    canvas.on('mouse:move', function(evt) {
+    translatePaddle();
+}
+
+var translatePaddle = function() {
+     canvas.on('mouse:move', function(evt) {
 	var currentMouseCoords = getMouseCoords(evt);
 	var dx = currentMouseCoords.x - previousMouseCoord.x;
 	var dy = currentMouseCoords.y - previousMouseCoord.y;
@@ -207,10 +211,6 @@ var addListeners = function() {
 	var newTranslate = fabric.util.multiplyTransformMatrices(
 	    Window.paddle.fabricPaddle.transformMatrix, translate);
 	Window.paddle.fabricPaddle.set({transformMatrix: newTranslate});
-	
-	//console.log(paddle.setCoords());
-	//console.log("Mouse: x: " + currentMouseCoords.x +
-	//	    " y: " + currentMouseCoords.y);
 	
 	previousMouseCoord = currentMouseCoords;
     }, false);    
