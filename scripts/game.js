@@ -48,8 +48,7 @@ var initialize = function () {
 
     makeArrayOfBlocks();
     makeBall();
-    makePaddle(canvasWidth/2, canvasHeight/2,
-	       PADDLE_LENGTH, PADDLE_WIDTH, 65);
+    makePaddle(PADDLE_LENGTH, PADDLE_WIDTH, 100);
 }
 
 var makeBall = function (){
@@ -63,13 +62,13 @@ var makeBall = function (){
     console.log(ball);
 }
 
-var makePaddle = function (x, y, length, width, angle) {
+var makePaddle = function (length, width, angle) {
     var theta = 90 - angle;
-    var pivot = {x : x, y : y};
-
+    var pivot = {x : 0, y : 0};
+    
     // canvas coordinate system is 0,0 for top left corner
-    var right_side_top = {x: x + length * math.cos(math.unit(theta, 'deg')),
-			  y: y - length * math.sin(math.unit(theta, 'deg'))}
+    var right_side_top = {x: 0 + length * math.cos(math.unit(theta, 'deg')),
+			  y: 0 - length * math.sin(math.unit(theta, 'deg'))}
     //console.log(right_side_top)
     line = new fabric.Line([pivot.x, pivot.y,
 			    right_side_top.x, right_side_top.y], {
@@ -82,12 +81,10 @@ var makePaddle = function (x, y, length, width, angle) {
     var sideA = width;
     var sideC = sideA / math.sin(math.unit(90 - theta, 'deg'));
     console.log("This is c: " + sideC);
-    var offsetPoint = {x: x, y: y - sideC};
+    var offsetPoint = {x: 0, y: 0 - sideC};
 
-    // x goes in the intuitive directions
-    // y has to take into account screen coordinates--y is flipped sign
-    var vector_v = {x : right_side_top.x - x,
-		    y: -1*(right_side_top.y - y)};
+    var vector_v = {x : right_side_top.x - 0,
+		    y: -1*(right_side_top.y - 0)};
     var vector_w = calculateLeftSideTopPoint(vector_v, width);
     var leftSideTop = {x: right_side_top.x - vector_w.x,
 		       y: right_side_top.y - vector_w.y};
@@ -116,12 +113,12 @@ var makePaddle = function (x, y, length, width, angle) {
     canvas.add(line3);
     Window.line2 = line3;
 
-    var vector_t = {x: -1*(right_side_top.x - x),
-		    y: right_side_top.y - y}
-    var leftPartLeftSideBottom = {x: x + vector_t.x,
-				  y: y + vector_t.y};
+    var vector_t = {x: -1*(right_side_top.x - 0),
+		    y: right_side_top.y - 0}
+    var leftPartLeftSideBottom = {x: 0 + vector_t.x,
+				  y: 0 + vector_t.y};
 
-    line4 =  new fabric.Line([x, y,
+    line4 =  new fabric.Line([0, 0,
 			    leftPartLeftSideBottom.x, leftPartLeftSideBottom.y], {
 	fill: 'grey',
 	stroke: 'grey'
@@ -129,9 +126,8 @@ var makePaddle = function (x, y, length, width, angle) {
     canvas.add(line4);
     Window.line2 = line4;
 
-    var pointOfReference = {x: x, y: y};
     paddle =  new fabric.Polygon([
-	pointOfReference,
+	pivot,
 	right_side_top,
 	leftSideTop,
 	offsetPoint,
@@ -145,7 +141,6 @@ var makePaddle = function (x, y, length, width, angle) {
     });
     Window.paddle = paddle;
     canvas.add(paddle);
-    console.log(paddle);
 }
 
 var calculateLeftSideTopPoint = function(vector_v, paddleWidth){
@@ -193,6 +188,10 @@ var processInput = function() {
 
 var update = function(elapsed) {
 
+}
+
+var updatePaddle = function(matrix){
+    
 }
 
 var render = function() {
