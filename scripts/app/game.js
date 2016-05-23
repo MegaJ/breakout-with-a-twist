@@ -1,8 +1,9 @@
-Window.onload = define(["fabric.min", "math", "app/model"],
-			function(fabric, mathjs, model) {
+Window.onload = define(["fabric.min", "math", "app/model", "app/paddle"],
+		       function(fabric, mathjs, model, Paddlejs) {
 			    Window.fabric = fabric;
 			    Window.math = math = mathjs;
 			    Window.model = model;
+			    Window.Paddle = Paddle = Paddlejs;
 			    initialize();
 			    addListeners();
 			    game();
@@ -18,7 +19,7 @@ var PADDLE_WIDTH = 20;
 var LAG = 0.0;
 
 // game runs at a series of fixed time steps
-var game = function() {    
+var game = function(time) {    
     var previous = new Date().getTime();    
     var current = new Date().getTime();
     var elapsed = current - previous;
@@ -38,7 +39,7 @@ var game = function() {
 }
 
 var initialize = function () {
-     // create a wrapper around native canvas element (with id="c")
+     
     canvas = new fabric.Canvas('game');
     Window.canvas = canvas;
     canvas.backgroundColor = "seashell";
@@ -48,7 +49,8 @@ var initialize = function () {
 
     makeArrayOfBlocks();
     makeBall();
-    makePaddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
+    Window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
+    canvas.add(paddle.fabricPaddle);
 }
 
 var makeBall = function (){
@@ -112,7 +114,7 @@ var makePaddle = function (length, width, angle) {
 	fill: 'orange',
 	stroke: 'orange'
 			    });
-    //canvas.add(line3);
+    
     Window.line2 = line3;
 
     var vector_t = {x: -1*(rightBottom.x - 0),
@@ -133,22 +135,6 @@ var makePaddle = function (length, width, angle) {
     });
     Window.paddle2 = paddle2;
     canvas.add(paddle2);
-
-    paddle =  new fabric.Polygon([
-	pivot,
-	rightBottom,
-	rightTop,
-	offsetPivot,
-	leftTop,
-	leftBottom
-    ], {
-	stroke: 'blue',
-	fill: 'rgba(0,0,255,0.75)',
-	strokeWidth: 3,
-	transformMatrix: [1,0,  0,1,  0,0]
-    });
-    Window.paddle = paddle;
-    canvas.add(paddle);
 }
 
 // createPerpendicularVectorTo(vector_v)
@@ -219,8 +205,8 @@ var addListeners = function() {
 	// example of matrix multiplication
 	var translate = [1, 0, 0, 1, dx, dy];
 	var newTranslate = fabric.util.multiplyTransformMatrices(
-	    Window.paddle2.transformMatrix, translate);
-	Window.paddle2.set({transformMatrix: newTranslate});
+	    Window.paddle.fabricPaddle.transformMatrix, translate);
+	Window.paddle.fabricPaddle.set({transformMatrix: newTranslate});
 	
 	//console.log(paddle.setCoords());
 	//console.log("Mouse: x: " + currentMouseCoords.x +
