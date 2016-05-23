@@ -128,14 +128,15 @@ var makePaddle = function (x, y, length, width, angle) {
 			    });
     canvas.add(line4);
     Window.line2 = line4;
-    
+
+    var pointOfReference = {x: x, y: y};
     paddle =  new fabric.Polygon([
-	{ x: 10, y: 10 },
-	{ x: 50, y: 30 },
-	{ x: 40, y: 70 },
-	{ x: 60, y: 50 },
-	{ x: 100, y: 150 },
-	{ x: 40, y: 100 }
+	pointOfReference,
+	right_side_top,
+	leftSideTop,
+	offsetPoint,
+	leftPartLeftSideTop,
+	leftPartLeftSideBottom
     ], {
 	stroke: 'blue',
 	fill: 'rgba(0,0,255,0.75)',
@@ -144,6 +145,7 @@ var makePaddle = function (x, y, length, width, angle) {
     });
     Window.paddle = paddle;
     canvas.add(paddle);
+    console.log(paddle);
 }
 
 var calculateLeftSideTopPoint = function(vector_v, paddleWidth){
