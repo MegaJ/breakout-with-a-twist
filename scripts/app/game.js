@@ -18,7 +18,7 @@ var PADDLE_WIDTH = 20;
 var LAG = 0.0;
 
 // game runs at a series of fixed time steps
-var game = function () {    
+var game = function() {    
     var previous = new Date().getTime();    
     var current = new Date().getTime();
     var elapsed = current - previous;
@@ -48,7 +48,7 @@ var initialize = function () {
 
     makeArrayOfBlocks();
     makeBall();
-    makePaddle(PADDLE_LENGTH, PADDLE_WIDTH, 90);
+    makePaddle(PADDLE_LENGTH, PADDLE_WIDTH, 100);
 }
 
 var makeBall = function (){
@@ -152,6 +152,7 @@ var makePaddle = function (length, width, angle) {
     canvas.add(paddle);
 }
 
+// createPerpendicularVectorTo(vector_v)
 var calculateLeftSideTopPoint = function(vector_v, paddleWidth){
     var v_x = vector_v.x;
     var v_y = vector_v.y;
