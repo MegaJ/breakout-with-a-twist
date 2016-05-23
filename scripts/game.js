@@ -9,31 +9,30 @@ Window.onload = require(["fabric.min", "math", "model"],
 			});
 
 // for 60 frames a second
-var MS_PER_UPDATE = 1000 / 60;
+var MS_PER_UPDATE = 1000 / 30;
 
 // for now I don't want these dynamically changed
 var BALL_RADIUS = 15;
 var PADDLE_LENGTH = 80;
 var PADDLE_WIDTH = 20;
+var LAG = 0.0;
 
 // game runs at a series of fixed time steps
 var game = function () {    
-    var previous = new Date().getTime();
-    var lag = 0.0;
-    
+    var previous = new Date().getTime();    
     var current = new Date().getTime();
     var elapsed = current - previous;
     previous = current;
-    lag += elapsed;
+    LAG += elapsed;
     
     processInput();
 
-    while (lag >= MS_PER_UPDATE) {
+    while (LAG >= MS_PER_UPDATE) {
 	update();
-	lag -= MS_PER_UPDATE;
+	LAG -= MS_PER_UPDATE;
     }
 
-    render(lag / MS_PER_UPDATE);
+    render(LAG / MS_PER_UPDATE);
     
     requestAnimationFrame(game);
 }
@@ -50,7 +49,7 @@ var initialize = function () {
     makeArrayOfBlocks();
     makeBall();
     makePaddle(canvasWidth/2, canvasHeight/2,
-	       PADDLE_LENGTH, PADDLE_WIDTH, 45);
+	       PADDLE_LENGTH, PADDLE_WIDTH, 65);
 }
 
 var makeBall = function (){
@@ -65,33 +64,70 @@ var makeBall = function (){
 }
 
 var makePaddle = function (x, y, length, width, angle) {
-    //angle = angle * (Math.PI/180); // convert to radians
-    
     var theta = 90 - angle;
     var pivot = {x : x, y : y};
 
     // canvas coordinate system is 0,0 for top left corner
     var right_side_top = {x: x + length * math.cos(math.unit(theta, 'deg')),
 			  y: y - length * math.sin(math.unit(theta, 'deg'))}
-    console.log(right_side_top)
+    //console.log(right_side_top)
     line = new fabric.Line([pivot.x, pivot.y,
 			    right_side_top.x, right_side_top.y], {
-	fill: 'green',
-	stroke: 'green'
+	fill: 'black',
+	stroke: 'black'
     });
     canvas.add(line);
     Window.line = line;
 
-    var offsetPoint = {x: x, y: pivot.y - width};
-    var left_side_top = {}
+    var sideA = width;
+    var sideC = sideA / math.sin(math.unit(90 - theta, 'deg'));
+    console.log("This is c: " + sideC);
+    var offsetPoint = {x: x, y: y - sideC};
+
+    // x goes in the intuitive directions
+    // y has to take into account screen coordinates--y is flipped sign
+    var vector_v = {x : right_side_top.x - x,
+		    y: -1*(right_side_top.y - y)};
+    var vector_w = calculateLeftSideTopPoint(vector_v, width);
+    var leftSideTop = {x: right_side_top.x - vector_w.x,
+		       y: right_side_top.y - vector_w.y};
+
+    
+    console.log(leftSideTop);
     line2 =  new fabric.Line([offsetPoint.x, offsetPoint.y,
-			    right_side_top.x, right_side_top.y], {
+			    leftSideTop.x, leftSideTop.y], {
 	fill: 'red',
 	stroke: 'red'
 			    });
     canvas.add(line2);
     Window.line2 = line2;
+
+    // vector_s is a reflection of vector_v
+    var vector_s = {x: -1*(leftSideTop.x - offsetPoint.x),
+		    y: leftSideTop.y - offsetPoint.y}
+    var leftPartLeftSideTop = {x: offsetPoint.x + vector_s.x,
+			       y: offsetPoint.y + vector_s.y}
     
+     line3 =  new fabric.Line([offsetPoint.x, offsetPoint.y,
+			    leftPartLeftSideTop.x, leftPartLeftSideTop.y], {
+	fill: 'orange',
+	stroke: 'orange'
+			    });
+    canvas.add(line3);
+    Window.line2 = line3;
+
+    var vector_t = {x: -1*(right_side_top.x - x),
+		    y: right_side_top.y - y}
+    var leftPartLeftSideBottom = {x: x + vector_t.x,
+				  y: y + vector_t.y};
+
+    line4 =  new fabric.Line([x, y,
+			    leftPartLeftSideBottom.x, leftPartLeftSideBottom.y], {
+	fill: 'grey',
+	stroke: 'grey'
+			    });
+    canvas.add(line4);
+    Window.line2 = line4;
     
     paddle =  new fabric.Polygon([
 	{ x: 10, y: 10 },
@@ -107,9 +143,26 @@ var makePaddle = function (x, y, length, width, angle) {
 	transformMatrix: [1,0,  0,1,  0,0]
     });
     Window.paddle = paddle;
-
-    //console.log(paddle.)
     canvas.add(paddle);
+}
+
+var calculateLeftSideTopPoint = function(vector_v, paddleWidth){
+    var v_x = vector_v.x;
+    var v_y = vector_v.y;
+    
+    var w_y = math.chain(v_x*v_x)
+	.divide(v_x*v_x + v_y*v_y)
+	.sqrt()
+	.done();
+    console.log('w_y: ' + w_y);
+    var w_x = math.sqrt(1 - math.multiply(w_y, w_y));
+
+    console.log('w_x: ' + w_x);
+    // multiply by the scalar paddleWidth
+    // flip w_x, w_y to negative because of screen coordinate system
+    var vector_w = {x: w_x*paddleWidth,
+		    y: w_y*paddleWidth};
+    return vector_w;
 }
 
 var makeRowOfBlocks = function(verticalSpace) {
@@ -156,9 +209,9 @@ var addListeners = function() {
 	    Window.paddle.transformMatrix, translate);
 	Window.paddle.set({transformMatrix: newTranslate});
 	
-	console.log(paddle.setCoords());
-	console.log("Mouse: x: " + currentMouseCoords.x +
-		    " y: " + currentMouseCoords.y);
+	//console.log(paddle.setCoords());
+	//console.log("Mouse: x: " + currentMouseCoords.x +
+	//	    " y: " + currentMouseCoords.y);
 	
 	previousMouseCoord = currentMouseCoords;
     }, false);    
