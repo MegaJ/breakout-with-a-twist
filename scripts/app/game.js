@@ -1,4 +1,4 @@
-Window.onload = require(["fabric.min", "math", "model"],
+Window.onload = define(["fabric.min", "math", "app/model"],
 			function(fabric, mathjs, model) {
 			    Window.fabric = fabric;
 			    Window.math = math = mathjs;

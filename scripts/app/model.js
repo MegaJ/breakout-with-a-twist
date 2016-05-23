@@ -1,5 +1,5 @@
-require(["fabric.min"], function(dependency) {
-   // TODO: Create a model
+define(["fabric.min"], function(dependency) {
+    // TODO: Create a model
 });
 
 // global namespace
