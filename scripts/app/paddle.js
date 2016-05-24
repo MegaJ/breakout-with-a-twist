@@ -25,7 +25,6 @@ define(["fabric.min", "math"], function(fabricjs, math){
     }
 
     var calculatePaddlePoints = function(length, width, angle) {
-	
 	var theta = 90 - angle;
 	var pivot = {x : 0, y : 0};
 
@@ -69,13 +68,32 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	     point2.x, point2.y],
 	    {fill: 'green', stroke: 'green'})
     }
+    
+    // line must be a fabric.Line object
+    var updateLine = function(line, newPoint1, newPoint2) {
+	// line.x1 = newPoint1.x; 
+	// line.y1 = newPoint1.y;
+	// line.x2 = newPoint2.x; 
+	// line.y2 = newPoint2.y;
+	line.set({x1: newPoint1.x,
+		  y1: newPoint1.y,
+		  x2: newPoint2.x,
+		  y2: newPoint2.y})
+	console.log(line)
+	return line;
+    }
+
+    var updatePaddleLines = function() {
+	
+    }
 
     var Paddle = function(length, width, angle) {
 	this.length = length;
 	this.width = width;
 	this.angle = angle;
 	this.points = points = calculatePaddlePoints(length, width, angle);
-
+	
+	console.log(points.pivot)
 	this.line1 = line1 = makeLine(points.pivot, points.rightBottom);
 	this.line2 = line2 = makeLine(points.rightBottom, points.rightTop);
 	this.line3 = line3 = makeLine(points.rightTop, points.offsetPivot);
@@ -94,12 +112,15 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	    this.length = length;
 	    this.width = width;
 	    this.angle = angle;
-
-	    this.paddlePoints = calculatePaddlePoints();
+	    this.points = points = calculatePaddlePoints(length, width, angle);
+	    
+	    this.line1 = updateLine(this.line1, points.pivot, points.rightBottom);
+	    this.line2 = updateLine(this.line2, points.rightBottom, points.rightTop);
+	    this.line3 = updateLine(this.line3, points.rightTop, points.offsetPivot);
+	    this.line4 = updateLine(this.line4, points.offsetPivot, points.leftTop);
+	    this.line5 = updateLine(this.line5, points.leftTop, points.leftBottom);
+	    this.line6 = updateLine(this.line6, points.leftBottom, points.pivot);   
 	}
-	// can you just update the Group?
-	// might be able to do fabricPaddle.insertAt(newFabricLine, index)
-	// insert at automatically re-renders canvas
     }
 
     return Paddle;
