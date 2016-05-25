@@ -1,12 +1,13 @@
-Window.onload = define(["fabric.min", "math", "app/model", "app/paddle"],
-		       function(fabric, mathjs, model, Paddlejs) {
-			    Window.fabric = fabric;
-			    Window.math = math = mathjs;
-			    Window.model = model;
-			    Window.Paddle = Paddle = Paddlejs;
-			    initialize();
-			    addListeners();
-			    game();
+Window.onload = define(["fabric.min", "math", "app/model", "app/paddle", "app/ball"],
+		       function(fabric, mathjs, model, Paddlejs, Balljs) {
+			   Window.fabric = fabric;
+			   Window.math = math = mathjs;
+			   Window.model = model;
+			   Window.Paddle = Paddle = Paddlejs;
+			   Window.Ball = Ball =  Balljs;
+			   initialize();
+			   addListeners();
+			   game();
 			});
 
 // for 60 frames a second
@@ -48,9 +49,15 @@ var initialize = function () {
     console.log("width: " + canvasWidth + " height: " + canvasHeight);
 
     makeArrayOfBlocks();
-    makeBall();
+    // makeBall();
     Window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
     canvas.add(paddle.fabricPaddle);
+
+    // ball extends fabric.Circle
+    Window.ball = ball = new Ball(20, 5, 5, 'black');
+    canvas.add(ball.fabricBall)
+    ball.fabricBall.center()
+	.setCoords();
 }
 
 var makeBall = function (){
@@ -87,6 +94,7 @@ var makeArrayOfBlocks = function(){
     }
 }
 
+// Using listeners instead
 var processInput = function() {
     
 }
@@ -117,7 +125,7 @@ var translatePaddle = function() {
 	var translate = [1, 0, 0, 1, dx, dy];
 	var newTranslate = fabric.util.multiplyTransformMatrices(
 	    Window.paddle.fabricPaddle.transformMatrix, translate);
-	Window.paddle.fabricPaddle.set({transformMatrix: newTranslate});
+	Window.paddle.fabricPaddle.transformMatrix = newTranslate;
 	
 	previousMouseCoord = currentMouseCoords;
     }, false);    

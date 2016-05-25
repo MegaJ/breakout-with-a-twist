@@ -71,15 +71,15 @@ define(["fabric.min", "math"], function(fabricjs, math){
     
     // line must be a fabric.Line object
     var updateLine = function(line, newPoint1, newPoint2) {
+	// no idea why assignment doesn't work, but the line's set method does.
 	// line.x1 = newPoint1.x; 
 	// line.y1 = newPoint1.y;
 	// line.x2 = newPoint2.x; 
 	// line.y2 = newPoint2.y;
 	line.set({x1: newPoint1.x,
-		  y1: newPoint1.y,
-		  x2: newPoint2.x,
-		  y2: newPoint2.y})
-	console.log(line)
+	 	  y1: newPoint1.y,
+	 	  x2: newPoint2.x,
+	 	  y2: newPoint2.y})
 	return line;
     }
 
@@ -91,19 +91,18 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	this.length = length;
 	this.width = width;
 	this.angle = angle;
-	this.points = points = calculatePaddlePoints(length, width, angle);
+	this.points = calculatePaddlePoints(length, width, angle);
 	
-	console.log(points.pivot)
-	this.line1 = line1 = makeLine(points.pivot, points.rightBottom);
-	this.line2 = line2 = makeLine(points.rightBottom, points.rightTop);
-	this.line3 = line3 = makeLine(points.rightTop, points.offsetPivot);
-	this.line4 = line4 = makeLine(points.offsetPivot, points.leftTop);
-	this.line5 = line5 = makeLine(points.leftTop, points.leftBottom);
-	this.line6 = line6 = makeLine(points.leftBottom, points.pivot);
+	this.line1 = makeLine(this.points.pivot, this.points.rightBottom);
+	this.line2 = makeLine(this.points.rightBottom, this.points.rightTop);
+	this.line3 = makeLine(this.points.rightTop, this.points.offsetPivot);
+	this.line4 = makeLine(this.points.offsetPivot, this.points.leftTop);
+	this.line5 = makeLine(this.points.leftTop, this.points.leftBottom);
+	this.line6 = makeLine(this.points.leftBottom, this.points.pivot);
 
-	Window.line1 = line1, Window.line2 = line2, Window.line3 = line3, Window.line4 = line4, Window.line5 = line5, Window.line6 = line6;
+	Window.line1 = this.line1, Window.line2 = this.line2, Window.line3 = this.line3, Window.line4 = this.line4, Window.line5 = this.line5, Window.line6 = this.line6;
 
-	this.fabricPaddle = new fabric.Group([line1, line2, line3, line4, line5, line6],
+	this.fabricPaddle = new fabric.Group([this.line1, this.line2, this.line3, this.line4, this.line5, this.line6],
 					     {transformMatrix: [1,0,  0,1,  0,0]});
     }
 
@@ -112,14 +111,14 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	    this.length = length;
 	    this.width = width;
 	    this.angle = angle;
-	    this.points = points = calculatePaddlePoints(length, width, angle);
+	    this.points = calculatePaddlePoints(length, width, angle);
 	    
-	    this.line1 = updateLine(this.line1, points.pivot, points.rightBottom);
-	    this.line2 = updateLine(this.line2, points.rightBottom, points.rightTop);
-	    this.line3 = updateLine(this.line3, points.rightTop, points.offsetPivot);
-	    this.line4 = updateLine(this.line4, points.offsetPivot, points.leftTop);
-	    this.line5 = updateLine(this.line5, points.leftTop, points.leftBottom);
-	    this.line6 = updateLine(this.line6, points.leftBottom, points.pivot);   
+	    this.line1 = updateLine(this.line1, this.points.pivot, this.points.rightBottom);
+	    this.line2 = updateLine(this.line2, this.points.rightBottom, this.points.rightTop);
+	    this.line3 = updateLine(this.line3, this.points.rightTop, this.points.offsetPivot);
+	    this.line4 = updateLine(this.line4, this.points.offsetPivot, this.points.leftTop);
+	    this.line5 = updateLine(this.line5, this.points.leftTop, this.points.leftBottom);
+	    this.line6 = updateLine(this.line6, this.points.leftBottom, this.points.pivot);
 	}
     }
 
