@@ -60,20 +60,6 @@ var initialize = function () {
 	.setCoords();
 }
 
-var makeBall = function (){
-    Window.ball = ball = new fabric.Circle({
-	radius: BALL_RADIUS,
-	fill: 'green'
-    });
-    canvas.add(ball);
-    ball.center()
-	.setCoords();
-
-    ball.velocity = {dx: 5, dy: 5};
-    ball.set({transformMatrix: [1, 0,  0, 1,  5, 5]});
-    console.log(ball);
-}
-
 var makeRowOfBlocks = function(verticalSpace) {
     for (var i = 0; i < 5; i++) {
     	canvas.add(new fabric.Rect({
