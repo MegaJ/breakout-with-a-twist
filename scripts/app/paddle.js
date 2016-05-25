@@ -1,6 +1,6 @@
 define(["fabric.min", "math"], function(fabricjs, math){
 
-    var calculateLeftSideTopPoint = function(vector_v, paddleWidth){
+    var calculateRightTopPoint = function(vector_v, paddleWidth){
 	var v_x = vector_v.x;
 	var v_y = vector_v.y;
 	
@@ -39,7 +39,7 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	var offsetPivot = {x: 0, y: 0 - sideC};
 	var vector_v = {x : rightBottom.x - 0,
 			y: -1*(rightBottom.y - 0)};
-	var vector_w = calculateLeftSideTopPoint(vector_v, width);
+	var vector_w = calculateRightTopPoint(vector_v, width);
 	var rightTop = {x: rightBottom.x - vector_w.x,
 			y: rightBottom.y - vector_w.y};
 
