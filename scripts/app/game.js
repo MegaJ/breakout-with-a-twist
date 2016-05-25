@@ -99,9 +99,12 @@ var render = function() {
 
 var addListeners = function() {
     translatePaddle();
+    morphPaddle();
 }
 
 var previousMouseCoord = {x: 0, y: 0};
+var currentMouseCoords = {x: 0, y: 0};
+
 var translatePaddle = function() {
      canvas.on('mouse:move', function(evt) {
 	var currentMouseCoords = getMouseCoords(evt);
@@ -115,6 +118,18 @@ var translatePaddle = function() {
 	
 	previousMouseCoord = currentMouseCoords;
     }, false);    
+}
+
+var morphPaddle = function() {
+    document.addEventListener("keydown", function(evt) {
+	var keyCode = evt.keyCode;
+	if (keyCode === 65) {
+	    paddle.updatePaddleForm(PADDLE_LENGTH, PADDLE_WIDTH, paddle.angle + 5);
+	} else if (keyCode === 83) {
+	    paddle.updatePaddleForm(PADDLE_LENGTH, PADDLE_WIDTH, paddle.angle - 5);
+	}
+	
+    });
 }
 
 var getMouseCoords = function(event) {
