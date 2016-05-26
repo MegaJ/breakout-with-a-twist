@@ -41,7 +41,7 @@ var game = function(time) {
 
 var initialize = function () {
      
-    canvas = new fabric.Canvas('game');
+    canvas = new fabric.Canvas('game', {stateful: false, renderOnAddRemove: false});
     Window.canvas = canvas;
     canvas.backgroundColor = "seashell";
     var canvasWidth = canvas.getWidth();
@@ -114,7 +114,7 @@ var translatePaddle = function() {
 	var translate = [1, 0, 0, 1, dx, dy];
 	var newTranslate = fabric.util.multiplyTransformMatrices(
 	    Window.paddle.fabricPaddle.transformMatrix, translate);
-	Window.paddle.fabricPaddle.transformMatrix = newTranslate;
+	 Window.paddle.fabricPaddle.transformMatrix = newTranslate;
 	
 	previousMouseCoord = currentMouseCoords;
     }, false);    
