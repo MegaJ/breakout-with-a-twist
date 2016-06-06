@@ -62,24 +62,31 @@ define(["fabric.min", "math"], function(fabricjs, math){
 		leftBottom: leftBottom}
     }
     
-    var makeLine = function(point1, point2){
+    var makeLine = function(point1, point2, color){
 	return new fabric.Line(
 	    [point1.x, point1.y,
 	     point2.x, point2.y],
-	    {fill: 'green', stroke: 'green'})
+	    {fill: 'green', stroke: color, originX: 'left', originY: 'top',
+			left: math.min(point1.x, point2.x),
+			top: math.min(point1.y, point2.y)});
+	// I'm pretty sure that when grouping the lines together,
+	// the left and the top properties get overridden...
     }
     
     // line must be a fabric.Line object
     var updateLine = function(line, newPoint1, newPoint2) {
-	// no idea why assignment doesn't work, but the line's set method does.
-	// line.x1 = newPoint1.x; 
-	// line.y1 = newPoint1.y;
-	// line.x2 = newPoint2.x; 
-	// line.y2 = newPoint2.y;
+	
+	// I use magic constants.
+	// Even I don't know why I need these constants -0.5 and 39.14
+	// but otherwise the lines all shift upward and to the left slightly
 	line.set({x1: newPoint1.x,
 	 	  y1: newPoint1.y,
 	 	  x2: newPoint2.x,
-	 	  y2: newPoint2.y})
+	 	  y2: newPoint2.y,
+		  left: math.min(newPoint1.x, newPoint2.x) - 0.5,
+		  top: math.min(newPoint1.y, newPoint2.y) + 39.14});
+
+	
 	return line;
     }
 
@@ -93,12 +100,12 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	this.angle = angle;
 	this.points = calculatePaddlePoints(length, width, angle);
 	
-	this.line1 = makeLine(this.points.pivot, this.points.rightBottom);
-	this.line2 = makeLine(this.points.rightBottom, this.points.rightTop);
-	this.line3 = makeLine(this.points.rightTop, this.points.offsetPivot);
-	this.line4 = makeLine(this.points.offsetPivot, this.points.leftTop);
-	this.line5 = makeLine(this.points.leftTop, this.points.leftBottom);
-	this.line6 = makeLine(this.points.leftBottom, this.points.pivot);
+	this.line1 = makeLine(this.points.pivot, this.points.rightBottom, 'black');
+	this.line2 = makeLine(this.points.rightBottom, this.points.rightTop, 'red');
+	this.line3 = makeLine(this.points.rightTop, this.points.offsetPivot, 'purple');
+	this.line4 = makeLine(this.points.offsetPivot, this.points.leftTop, 'orange');
+	this.line5 = makeLine(this.points.leftTop, this.points.leftBottom, 'green');
+	this.line6 = makeLine(this.points.leftBottom, this.points.pivot, 'blue');
 
 	Window.line1 = this.line1, Window.line2 = this.line2, Window.line3 = this.line3, Window.line4 = this.line4, Window.line5 = this.line5, Window.line6 = this.line6;
 
@@ -112,13 +119,15 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	    this.width = width;
 	    this.angle = angle;
 	    this.points = calculatePaddlePoints(length, width, angle);
-	    
+
 	    this.line1 = updateLine(this.line1, this.points.pivot, this.points.rightBottom);
 	    this.line2 = updateLine(this.line2, this.points.rightBottom, this.points.rightTop);
 	    this.line3 = updateLine(this.line3, this.points.rightTop, this.points.offsetPivot);
 	    this.line4 = updateLine(this.line4, this.points.offsetPivot, this.points.leftTop);
 	    this.line5 = updateLine(this.line5, this.points.leftTop, this.points.leftBottom);
-	    this.line6 = updateLine(this.line6, this.points.leftBottom, this.points.pivot);
+	    this.line6 = updateLine(this.line6, this.points.leftBottom, this.points.pivot);	
+
+	console.log(JSON.stringify(this.line6));
 	}
     }
 
