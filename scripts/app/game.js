@@ -1,16 +1,23 @@
-Window.onload = define(["fabric.min", "math", "app/model", "app/paddle", "app/ball"],
-		       function(fabric, mathjs, model, Paddlejs, Balljs) {
+Window.onload = define(["fabric.min",
+			"math",
+			"app/model",
+			"app/paddle",
+			"app/ball",
+		       "app/brick"],
+		       function(fabric, mathjs, model, Paddlejs, Balljs, Brick) {
 			   Window.fabric = fabric;
 			   Window.math = math = mathjs;
 			   Window.model = model;
 			   Window.Paddle = Paddle = Paddlejs;
 			   Window.Ball = Ball =  Balljs;
+			   Window.Brick = Brick;
+			   console.log(Brick);
 			   initialize();
 			   addListeners();
 			   game();
 			});
 
-// for 60 frames a second
+// for 30 frames a second
 var MS_PER_UPDATE = 1000 / 30;
 
 // for now I don't want these dynamically changed
@@ -62,15 +69,9 @@ var initialize = function () {
 
 var makeRowOfBlocks = function(verticalSpace) {
     for (var i = 0; i < 5; i++) {
-    	canvas.add(new fabric.Rect({
-    	    left: 50*i + 100,
-    	    top: verticalSpace,
-    	    fill: 'red',
-    	    width: 30,
-    	    get height() {
-    		return this.width * 0.5;
-    	    }
-    	}));
+	// width is 30
+    	canvas.add(new Window.Brick(50*i + 100, verticalSpace,
+    	     		     30, 30 * 0.5).fabricRect);
     };
 }
 

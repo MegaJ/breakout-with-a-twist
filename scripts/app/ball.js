@@ -10,12 +10,11 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	});
     }
 
-    Ball.prototype = {
-	updateVelocity : function(dx, dy) {
+    Ball.prototype.
+	updateVelocity = function(dx, dy) {
 	    this.dx = dx;
 	    this.dy = dy;
-	}
-    };
+	};    
 
     return Ball;
 });				  

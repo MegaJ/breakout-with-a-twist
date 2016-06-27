@@ -49,6 +49,7 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	var leftTop = {x: offsetPivot.x + vector_s.x,
 		       y: offsetPivot.y + vector_s.y};
 	
+	// vector_t is a reflection of the rightBottom
 	var vector_t = {x: -1*(rightBottom.x - 0),
 			y: rightBottom.y - 0};
 	var leftBottom = {x: 0 + vector_t.x,
@@ -113,8 +114,8 @@ define(["fabric.min", "math"], function(fabricjs, math){
 					     {transformMatrix: [1,0,  0,1,  0,0]});
     }
 
-    Paddle.prototype = {
-	updatePaddleForm: function(length, width, angle) {
+    Paddle.prototype.
+	updatePaddleForm = function(length, width, angle) {
 	    this.length = length;
 	    this.width = width;
 	    this.angle = angle;
@@ -127,9 +128,9 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	    this.line5 = updateLine(this.line5, this.points.leftTop, this.points.leftBottom);
 	    this.line6 = updateLine(this.line6, this.points.leftBottom, this.points.pivot);	
 
-	console.log(JSON.stringify(this.line6));
+	    console.log(JSON.stringify(this.line6));
 	}
-    }
+    
 
     return Paddle;
 });
