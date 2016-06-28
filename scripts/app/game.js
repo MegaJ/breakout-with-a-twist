@@ -108,30 +108,31 @@ var getMatrixY = function(fabricObj) {
 // the ball is set to a position where it makes contact with the wall
 // and it's direction is reversed
 var courtCollision = function() {
-    
 
     var ballPosX = getMatrixX(ball.fabricBall);
     var ballPosY = getMatrixY(ball.fabricBall);
     
-    var outOfBoundsRight = ballPosX + ball.dx >= 500 - BALL_RADIUS;
+    var outOfBoundsRight = ballPosX + ball.dx >= canvas.width - BALL_RADIUS;
     var outOfBoundsLeft = ballPosX + ball.dx <= 0 + BALL_RADIUS;
     var outOfHorizontalBounds = outOfBoundsLeft || outOfBoundsRight;
 
-    ballPosX = outOfBoundsRight ? 500 - BALL_RADIUS : ballPosX;
+    ballPosX = outOfBoundsRight ? canvas.width - BALL_RADIUS : ballPosX;
     ballPosX = outOfBoundsLeft ? 0 + BALL_RADIUS : ballPosX;
     ball.dx = outOfHorizontalBounds ? -ball.dx : ball.dx;
 
-    var outOfBoundsTop = ballPosY + ball.dy >= 500 - BALL_RADIUS;
+    var outOfBoundsTop = ballPosY + ball.dy >= canvas.height - BALL_RADIUS;
     var outOfBoundsBottom = ballPosY + ball.dy <= 0 + BALL_RADIUS;
     var outOfVerticalBounds = outOfBoundsTop || outOfBoundsBottom;
 
     // Warning: not sure if canvas.width is safe to use
-    ballPosY = outOfBoundsTop ? canvas.width - BALL_RADIUS : ballPosY;
+    ballPosY = outOfBoundsTop ? canvas.height - BALL_RADIUS : ballPosY;
     ballPosY = outOfBoundsBottom ? 0 + BALL_RADIUS : ballPosY;
     ball.dy = outOfVerticalBounds ? -ball.dy : ball.dy;
 
     var outOfBounds = outOfVerticalBounds || outOfHorizontalBounds;
 
+    // Set position explicitly. If the if-block isn't entered,
+    // just translate the ball as usual.
     if (outOfBounds) {
 	ball.fabricBall.transformMatrix = [1, 0,  0, 1,  ballPosX, ballPosY];
     }
@@ -145,6 +146,7 @@ var courtCollision = function() {
 
 var update = function(elapsed) {
     courtCollision();
+    // 
 }
 
 var updatePaddle = function(matrix){
