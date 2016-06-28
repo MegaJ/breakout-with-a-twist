@@ -11,7 +11,6 @@ Window.onload = define(["fabric.min",
 			   Window.Paddle = Paddle = Paddlejs;
 			   Window.Ball = Ball =  Balljs;
 			   Window.Brick = Brick;
-			   console.log(Brick);
 			   initialize();
 			   addListeners();
 			   game();
@@ -56,12 +55,16 @@ var initialize = function () {
     console.log("width: " + canvasWidth + " height: " + canvasHeight);
 
     makeArrayOfBlocks();
-    // makeBall();
     Window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
     canvas.add(paddle.fabricPaddle);
 
     // ball extends fabric.Circle
-    Window.ball = ball = new Ball(20, 5, 5, 'black');
+    Window.ball = ball = new Ball(5, 5,
+				  {radius: 20,
+				   fill: 'green',
+				   left: 100,
+				   top: 100
+				  });
     canvas.add(ball.fabricBall)
     ball.fabricBall.center()
 	.setCoords();

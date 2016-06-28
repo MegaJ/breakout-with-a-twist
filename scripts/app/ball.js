@@ -1,20 +1,25 @@
-define(["fabric.min", "math"], function(fabricjs, math){
+define(["fabric.min", "math", "convenience"], function(fabricjs, math, convenience){
 
-    var Ball = function(radius, dx, dy, color) {
+    var Ball = function(dx, dy, fabricOptions) {
 	this.dx = dx;
 	this.dy = dy;
-	this.fabricBall = new fabric.Circle({
-	    radius: radius,
-	    fill: color,
-	    transformMatrix: [1,0,  0,1,  0,0]
-	});
+	this.fabricBall = new fabric.Circle(fabricOptions);
+	this.willCollide = false;
     }
 
-    Ball.prototype.
-	updateVelocity = function(dx, dy) {
-	    this.dx = dx;
-	    this.dy = dy;
-	};    
+    convenience.addMethod.call(Ball.prototype, "addMethod", convenience.addMethod);
+    Ball.prototype
+	.addMethod("updateVelocity",
+    			  function(dx, dy) {
+    			      this.dx = dx;
+    			      this.dy = dy;
+    			  })
 
+    
+    	.addMethod("detectCollision",
+     		   function() {
+		       
+     		   });
+    
     return Ball;
 });				  
