@@ -14,9 +14,9 @@ Window.onload = define(["fabric.min",
 			   initialize();
 			   addListeners();
 			   
-			   var startTime = performance.now();
-			   game(startTime);
-			});
+			   // calls game once user ready to play
+			   userReady(game);
+		       });
 
 // for 30 frames a second
 var MS_PER_UPDATE = 1000 / 30;
@@ -26,8 +26,20 @@ var BALL_RADIUS = 15;
 var PADDLE_LENGTH = 80;
 var PADDLE_WIDTH = 20;
 var LAG = 0.0;
+var previous;
 
-var previous = performance.now();
+var userReady = function() {
+    render();
+    var fireGame = function () {
+	document.removeEventListener("keydown", fireGame);
+	var startTime = previous = performance.now();
+	game(startTime);
+    }
+    
+    document.addEventListener("keydown", fireGame);
+}
+
+
 // game runs at a series of fixed time steps\
 // the game function relies on requestAnimationFrame
 // to invoke it as a callback. rAF will pass in a high res times stamp
@@ -61,10 +73,11 @@ var initialize = function () {
     console.log("width: " + canvasWidth + " height: " + canvasHeight);
 
     makeArrayOfBlocks();
+
+    // TODO initialize paddle and ball start positions
     Window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
     canvas.add(paddle.fabricPaddle);
 
-    // ball extends fabric.Circle
     Window.ball = ball = new Ball(10, 9,
 				  {radius: 20,
 				   fill: 'green',
@@ -73,15 +86,17 @@ var initialize = function () {
 				   transformMatrix: [1, 0,  0, 1, 0, 0]
 				  });
     canvas.add(ball.fabricBall)
-    // ball.fabricBall.center()
-    // 	.setCoords();
 }
 
 var makeRowOfBlocks = function(verticalSpace) {
     for (var i = 0; i < 5; i++) {
 	// width is 30
-    	canvas.add(new Window.Brick(50*i + 100, verticalSpace,
-    	     		     30, 30 * 0.5).fabricRect);
+    	canvas.add(new Window.Brick({
+	    left: 30*i,
+	    top: 100,
+	    width: 30,
+	    height: 45,
+	    transformMatrix: [1,0,  0,1,  0,0]}).fabricRect);
     };
 }
 
@@ -111,7 +126,7 @@ var courtCollision = function() {
 
     var ballPosX = getMatrixX(ball.fabricBall);
     var ballPosY = getMatrixY(ball.fabricBall);
-    
+
     var outOfBoundsRight = ballPosX + ball.dx >= canvas.width - BALL_RADIUS;
     var outOfBoundsLeft = ballPosX + ball.dx <= 0 + BALL_RADIUS;
     var outOfHorizontalBounds = outOfBoundsLeft || outOfBoundsRight;
@@ -124,7 +139,6 @@ var courtCollision = function() {
     var outOfBoundsBottom = ballPosY + ball.dy <= 0 + BALL_RADIUS;
     var outOfVerticalBounds = outOfBoundsTop || outOfBoundsBottom;
 
-    // Warning: not sure if canvas.width is safe to use
     ballPosY = outOfBoundsTop ? canvas.height - BALL_RADIUS : ballPosY;
     ballPosY = outOfBoundsBottom ? 0 + BALL_RADIUS : ballPosY;
     ball.dy = outOfVerticalBounds ? -ball.dy : ball.dy;
@@ -146,7 +160,7 @@ var courtCollision = function() {
 
 var update = function(elapsed) {
     courtCollision();
-    // 
+    // TODO: Ball and brick collision
 }
 
 var updatePaddle = function(matrix){
