@@ -14,8 +14,6 @@ define(["fabric.min", "math", "convenience"], function(fabricjs, math, convenien
     			      this.dx = dx;
     			      this.dy = dy;
     			  })
-
-    
     	.addMethod("detectCollision",
      		   function() {
 		       

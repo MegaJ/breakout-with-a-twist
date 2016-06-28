@@ -33,7 +33,6 @@ var previous = performance.now();
 // to invoke it as a callback. rAF will pass in a high res times stamp
 var game = function(time) {
 
-    //console.log("time: ", time);
     var current = time;
     var elapsed = current - previous;
 
@@ -47,7 +46,7 @@ var game = function(time) {
 	LAG -= MS_PER_UPDATE;
     }
 
-    render(LAG / MS_PER_UPDATE);
+    render(LAG / MS_PER_UPDATE); // interpolation of rendering
    
     requestAnimationFrame(game);
 }
@@ -56,7 +55,7 @@ var initialize = function () {
      
     canvas = new fabric.Canvas('game', {stateful: false, renderOnAddRemove: false});
     Window.canvas = canvas;
-    canvas.backgroundColor = "seashell";
+    canvas.backgroundColor = "grey";
     var canvasWidth = canvas.getWidth();
     var canvasHeight = canvas.getHeight();
     console.log("width: " + canvasWidth + " height: " + canvasHeight);
@@ -66,15 +65,16 @@ var initialize = function () {
     canvas.add(paddle.fabricPaddle);
 
     // ball extends fabric.Circle
-    Window.ball = ball = new Ball(5, 5,
+    Window.ball = ball = new Ball(10, 9,
 				  {radius: 20,
 				   fill: 'green',
-				   left: 100,
-				   top: 100
+				   originX: 'center',
+				   originY: 'center',
+				   transformMatrix: [1, 0,  0, 1, 0, 0]
 				  });
     canvas.add(ball.fabricBall)
-    ball.fabricBall.center()
-	.setCoords();
+    // ball.fabricBall.center()
+    // 	.setCoords();
 }
 
 var makeRowOfBlocks = function(verticalSpace) {
@@ -96,8 +96,55 @@ var processInput = function() {
     
 }
 
+var getMatrixX = function(fabricObj) {
+    return fabricObj.transformMatrix[4];
+}
+
+var getMatrixY = function(fabricObj) {
+    return fabricObj.transformMatrix[5];
+}
+
+// courtCollision is preemptive: if the ball will hit something
+// the ball is set to a position where it makes contact with the wall
+// and it's direction is reversed
+var courtCollision = function() {
+    
+
+    var ballPosX = getMatrixX(ball.fabricBall);
+    var ballPosY = getMatrixY(ball.fabricBall);
+    
+    var outOfBoundsRight = ballPosX + ball.dx >= 500 - BALL_RADIUS;
+    var outOfBoundsLeft = ballPosX + ball.dx <= 0 + BALL_RADIUS;
+    var outOfHorizontalBounds = outOfBoundsLeft || outOfBoundsRight;
+
+    ballPosX = outOfBoundsRight ? 500 - BALL_RADIUS : ballPosX;
+    ballPosX = outOfBoundsLeft ? 0 + BALL_RADIUS : ballPosX;
+    ball.dx = outOfHorizontalBounds ? -ball.dx : ball.dx;
+
+    var outOfBoundsTop = ballPosY + ball.dy >= 500 - BALL_RADIUS;
+    var outOfBoundsBottom = ballPosY + ball.dy <= 0 + BALL_RADIUS;
+    var outOfVerticalBounds = outOfBoundsTop || outOfBoundsBottom;
+
+    // Warning: not sure if canvas.width is safe to use
+    ballPosY = outOfBoundsTop ? canvas.width - BALL_RADIUS : ballPosY;
+    ballPosY = outOfBoundsBottom ? 0 + BALL_RADIUS : ballPosY;
+    ball.dy = outOfVerticalBounds ? -ball.dy : ball.dy;
+
+    var outOfBounds = outOfVerticalBounds || outOfHorizontalBounds;
+
+    if (outOfBounds) {
+	ball.fabricBall.transformMatrix = [1, 0,  0, 1,  ballPosX, ballPosY];
+    }
+    
+    var translate = [1, 0, 0, 1, ball.dx, ball.dy];
+    var newTranslate = fabric.util.
+    	multiplyTransformMatrices(ball.fabricBall.transformMatrix,
+    				  translate);
+    ball.fabricBall.transformMatrix = newTranslate;
+}
+
 var update = function(elapsed) {
-    //console.log(ball);
+    courtCollision();
 }
 
 var updatePaddle = function(matrix){
