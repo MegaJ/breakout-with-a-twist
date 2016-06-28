@@ -13,7 +13,9 @@ Window.onload = define(["fabric.min",
 			   Window.Brick = Brick;
 			   initialize();
 			   addListeners();
-			   game();
+			   
+			   var startTime = performance.now();
+			   game(startTime);
 			});
 
 // for 30 frames a second
@@ -25,11 +27,16 @@ var PADDLE_LENGTH = 80;
 var PADDLE_WIDTH = 20;
 var LAG = 0.0;
 
-// game runs at a series of fixed time steps
-var game = function(time) {    
-    var previous = new Date().getTime();    
-    var current = new Date().getTime();
+var previous = performance.now();
+// game runs at a series of fixed time steps\
+// the game function relies on requestAnimationFrame
+// to invoke it as a callback. rAF will pass in a high res times stamp
+var game = function(time) {
+
+    //console.log("time: ", time);
+    var current = time;
     var elapsed = current - previous;
+
     previous = current;
     LAG += elapsed;
     
@@ -41,7 +48,7 @@ var game = function(time) {
     }
 
     render(LAG / MS_PER_UPDATE);
-    
+   
     requestAnimationFrame(game);
 }
 
@@ -90,7 +97,7 @@ var processInput = function() {
 }
 
 var update = function(elapsed) {
-
+    //console.log(ball);
 }
 
 var updatePaddle = function(matrix){

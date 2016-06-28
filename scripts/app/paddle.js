@@ -14,8 +14,8 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	// sqrt allows us to use either the positive or negative root.
 	if (v_y < 0) {w_x *= -1}
 
-	console.log('w_y: ' + w_y);
-	console.log('w_x: ' + w_x);
+	// console.log('w_y: ' + w_y);
+	// console.log('w_x: ' + w_x);
 
 	// vector_w is a unit vector. 
 	// Multiply by paddleWidth to obtain correct vector length
@@ -34,7 +34,7 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	
 	var sideA = width;
 	var sideC = sideA / math.sin(math.unit(90 - theta, 'deg'));
-	console.log("This is c: " + sideC);
+	//console.log("This is c: " + sideC);
 
 	var offsetPivot = {x: 0, y: 0 - sideC};
 	var vector_v = {x : rightBottom.x - 0,
@@ -128,7 +128,7 @@ define(["fabric.min", "math"], function(fabricjs, math){
 	    this.line5 = updateLine(this.line5, this.points.leftTop, this.points.leftBottom);
 	    this.line6 = updateLine(this.line6, this.points.leftBottom, this.points.pivot);	
 
-	    console.log(JSON.stringify(this.line6));
+	    //console.log(JSON.stringify(this.line6));
 	}
     
 
