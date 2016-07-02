@@ -58,6 +58,7 @@ var game = function(time) {
 	LAG -= MS_PER_UPDATE;
     }
 
+    // beware of possible negative LAG
     render(LAG / MS_PER_UPDATE); // interpolation of rendering
    
     requestAnimationFrame(game);
@@ -79,7 +80,7 @@ var initialize = function () {
     canvas.add(paddle.fabricPaddle);
 
     Window.ball = ball = new Ball(10, 9,
-				  {radius: 20,
+				  {radius: BALL_RADIUS,
 				   fill: 'green',
 				   originX: 'center',
 				   originY: 'center',
@@ -90,19 +91,23 @@ var initialize = function () {
 
 var makeRowOfBlocks = function(verticalSpace) {
     for (var i = 0; i < 5; i++) {
-	// width is 30
-    	canvas.add(new Window.Brick({
-	    left: 30*i,
-	    top: 100,
-	    width: 30,
-	    height: 45,
-	    transformMatrix: [1,0,  0,1,  0,0]}).fabricRect);
+	// is it more convenient to make brick's center the top left corner?
+	var fabricObj = {
+	    originX: 'center',
+	    originY: 'center',
+	    width: 45,
+	    height: 20,
+	    top: verticalSpace,
+	    transformMatrix: [1,0,  0,1,  0,0]};
+	var offset = 50;
+	fabricObj.left = offset + fabricObj.width/2 + (fabricObj.width + 1)*i
+    	canvas.add(new Window.Brick(fabricObj).fabricRect);
     };
 }
 
 var makeArrayOfBlocks = function(){
     for (var i = 1; i <= 5; i++) {
-	makeRowOfBlocks(i*30)
+	makeRowOfBlocks(i*30);
     }
 }
 
@@ -127,16 +132,16 @@ var courtCollision = function() {
     var ballPosX = getMatrixX(ball.fabricBall);
     var ballPosY = getMatrixY(ball.fabricBall);
 
-    var outOfBoundsRight = ballPosX + ball.dx >= canvas.width - BALL_RADIUS;
-    var outOfBoundsLeft = ballPosX + ball.dx <= 0 + BALL_RADIUS;
+    var outOfBoundsRight = ballPosX + ball.dx > canvas.width - BALL_RADIUS;
+    var outOfBoundsLeft = ballPosX + ball.dx < 0 + BALL_RADIUS;
     var outOfHorizontalBounds = outOfBoundsLeft || outOfBoundsRight;
 
     ballPosX = outOfBoundsRight ? canvas.width - BALL_RADIUS : ballPosX;
     ballPosX = outOfBoundsLeft ? 0 + BALL_RADIUS : ballPosX;
     ball.dx = outOfHorizontalBounds ? -ball.dx : ball.dx;
 
-    var outOfBoundsTop = ballPosY + ball.dy >= canvas.height - BALL_RADIUS;
-    var outOfBoundsBottom = ballPosY + ball.dy <= 0 + BALL_RADIUS;
+    var outOfBoundsTop = ballPosY + ball.dy > canvas.height - BALL_RADIUS;
+    var outOfBoundsBottom = ballPosY + ball.dy < 0 + BALL_RADIUS;
     var outOfVerticalBounds = outOfBoundsTop || outOfBoundsBottom;
 
     ballPosY = outOfBoundsTop ? canvas.height - BALL_RADIUS : ballPosY;
@@ -149,13 +154,14 @@ var courtCollision = function() {
     // just translate the ball as usual.
     if (outOfBounds) {
 	ball.fabricBall.transformMatrix = [1, 0,  0, 1,  ballPosX, ballPosY];
+    } else {
+	
+	var translate = [1, 0, 0, 1, ball.dx, ball.dy];
+	var newTranslate = fabric.util.
+    	    multiplyTransformMatrices(ball.fabricBall.transformMatrix,
+    				      translate);
+	ball.fabricBall.transformMatrix = newTranslate;
     }
-    
-    var translate = [1, 0, 0, 1, ball.dx, ball.dy];
-    var newTranslate = fabric.util.
-    	multiplyTransformMatrices(ball.fabricBall.transformMatrix,
-    				  translate);
-    ball.fabricBall.transformMatrix = newTranslate;
 }
 
 var update = function(elapsed) {
