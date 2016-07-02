@@ -56,7 +56,7 @@ var game = function(time) {
     processInput();
 
     while (LAG >= MS_PER_UPDATE) {
-	update();
+	update(); // if there is a collision, should I force a render?
 	LAG -= MS_PER_UPDATE;
     }
 
@@ -105,7 +105,6 @@ var makeRowOfBlocks = function(verticalOffset) {
 	    width: BRICK_WIDTH,
 	    height: BRICK_HEIGHT,
 	    transformMatrix: [1,0,  0,1,  brickCenterX, brickCenterY]};
-	
 	
     	canvas.add(new Window.Brick(fabricObj).fabricRect);
     };
@@ -158,7 +157,7 @@ var courtCollision = function() {
 
     /* Set position explicitly to be inbounds. 
      * On next update, the ball's dx and dy will have been set
-     * from the previous call to update, and jump to the else block
+     * from the previous call to courtCollision, and jump to the else block
      */
     if (outOfBounds) {
 	ball.fabricBall.transformMatrix = [1, 0,  0, 1,  ballPosX, ballPosY];
@@ -172,31 +171,65 @@ var courtCollision = function() {
     }
 }
 
+var deleteCollidedBrick = function(obj) {
+    var brickCollision = false;
+    if (obj.type === "rect") {
+	brickCollision = ballBrickCollision(ball.fabricBall, obj);
+	if (brickCollision) {
+	    canvas.remove(obj);
+	}
+    }
+}
+
 var testVar = 1;
 var update = function(elapsed) {
     courtCollision();
-    // TODO: Ball and brick collision
-    if (testVar) {
-	testVar = null;
-	// canvas only holds canvas objects..should I extend them in my own prototypes?
-    	// for(var i = 0; i < canvas._objects.length; i++) { 
-	//     if (canvas._objects[i].type === "rect") {
-	// 	// something like brickCollide(brick, ball);
-	//     };
-    	//     console.log(canvas._objects[i]);
-	// }
-	
-    }
-    var testBrick = canvas._objects[0].set("fill", "red");
-    // collision detection
-    // ballBrickCollision(ball.fabricBall, testBrick);
+
+    // canvas only holds canvas objects..should I extend them in my own prototypes?
+    var testBrick = canvas._objects[0];
+    testBrick.set("fill", "red");
+    canvas.forEachObject(deleteCollidedBrick);
 }
 
-// // pass in the fabricBall
-// var ballBrickCollision = function (circle, rectangle) {
-//     // Get center distances between ball and rectangle
-//     distanceToCenters = Math.abs(getMatrixX(circle),  rect.
-// }
+// From http://stackoverflow.com/a/402010 checkout the picture to visualize
+// this function can return an object with all the types of collisions
+// pass in the fabricBall
+var ballBrickCollision = function (circle, rectangle) {
+    // Get center distances between ball and rectangle
+    var xCentersDistance = Math.abs(getMatrixX(circle) - getMatrixX(rectangle));
+    var yCentersDistance = Math.abs(getMatrixY(circle) - getMatrixY(rectangle));
+
+    // collision is impossible because brick and circle
+    // are horizontally too distant from each other
+    if (xCentersDistance > (rectangle.width/2 + circle.radius)) {
+	return false;
+    }
+
+    // collision is impossible like above, but for the vertical dim.
+    if (yCentersDistance > (rectangle.height/2 + circle.radius)) {
+	return false;
+    }
+
+    // xCenterDistance at this point is <= rectangle.width/2 + circle.radius
+    // or the ball is at the corner.
+    if (xCentersDistance <= rectangle.width/2) {return true;}
+    if (yCentersDistance <= rectangle.height/2) {return true;}
+
+    // corner collision, distance between center of circle and corner
+    var xCornerDistance = xCentersDistance - rectangle.width/2;
+    var yCornerDistance = yCentersDistance - rectangle.height/2
+
+    // Check the diagonal of the square. The square is created
+    // by the xCornerDistance and the yCornerDistance. Compare to radius.
+    if (xCornerDistance*xCornerDistance + yCornerDistance*yCornerDistance
+	<= circle.radius*circle.radius) {
+	return true;
+    } else {
+	return false;
+    }
+
+    throw "Collision Detection doesn't catch all cases!";
+}
 
 var updatePaddle = function(matrix){
     
