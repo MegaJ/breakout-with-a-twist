@@ -25,6 +25,8 @@ var MS_PER_UPDATE = 1000 / 30;
 var BALL_RADIUS = 15;
 var PADDLE_LENGTH = 80;
 var PADDLE_WIDTH = 20;
+var BRICK_WIDTH = 45;
+var BRICK_HEIGHT = 20;
 var LAG = 0.0;
 var previous;
 
@@ -89,18 +91,22 @@ var initialize = function () {
     canvas.add(ball.fabricBall)
 }
 
-var makeRowOfBlocks = function(verticalSpace) {
+var makeRowOfBlocks = function(verticalOffset) {
     for (var i = 0; i < 5; i++) {
-	// is it more convenient to make brick's center the top left corner?
+
+	// center each rectangle at (0,0)
+	// then transform it to the correct location in view space
+	var offset = 50;
+	var brickCenterX = offset + BRICK_WIDTH/2 + (BRICK_WIDTH + 1)*i
+	var brickCenterY = verticalOffset
 	var fabricObj = {
 	    originX: 'center',
 	    originY: 'center',
-	    width: 45,
-	    height: 20,
-	    top: verticalSpace,
-	    transformMatrix: [1,0,  0,1,  0,0]};
-	var offset = 50;
-	fabricObj.left = offset + fabricObj.width/2 + (fabricObj.width + 1)*i
+	    width: BRICK_WIDTH,
+	    height: BRICK_HEIGHT,
+	    transformMatrix: [1,0,  0,1,  brickCenterX, brickCenterY]};
+	
+	
     	canvas.add(new Window.Brick(fabricObj).fabricRect);
     };
 }
@@ -150,8 +156,10 @@ var courtCollision = function() {
 
     var outOfBounds = outOfVerticalBounds || outOfHorizontalBounds;
 
-    // Set position explicitly. If the if-block isn't entered,
-    // just translate the ball as usual.
+    /* Set position explicitly to be inbounds. 
+     * On next update, the ball's dx and dy will have been set
+     * from the previous call to update, and jump to the else block
+     */
     if (outOfBounds) {
 	ball.fabricBall.transformMatrix = [1, 0,  0, 1,  ballPosX, ballPosY];
     } else {
@@ -164,10 +172,31 @@ var courtCollision = function() {
     }
 }
 
+var testVar = 1;
 var update = function(elapsed) {
     courtCollision();
     // TODO: Ball and brick collision
+    if (testVar) {
+	testVar = null;
+	// canvas only holds canvas objects..should I extend them in my own prototypes?
+    	// for(var i = 0; i < canvas._objects.length; i++) { 
+	//     if (canvas._objects[i].type === "rect") {
+	// 	// something like brickCollide(brick, ball);
+	//     };
+    	//     console.log(canvas._objects[i]);
+	// }
+	
+    }
+    var testBrick = canvas._objects[0].set("fill", "red");
+    // collision detection
+    // ballBrickCollision(ball.fabricBall, testBrick);
 }
+
+// // pass in the fabricBall
+// var ballBrickCollision = function (circle, rectangle) {
+//     // Get center distances between ball and rectangle
+//     distanceToCenters = Math.abs(getMatrixX(circle),  rect.
+// }
 
 var updatePaddle = function(matrix){
     
