@@ -3,14 +3,19 @@ Window.onload = define(["fabric.min",
 			"app/model",
 			"app/paddle",
 			"app/ball",
-		       "app/brick"],
-		       function(fabric, mathjs, model, Paddlejs, Balljs, Brick) {
-			   Window.fabric = fabric;
-			   Window.math = math = mathjs;
-			   Window.model = model;
-			   Window.Paddle = Paddle = Paddlejs;
-			   Window.Ball = Ball =  Balljs;
-			   Window.Brick = Brick;
+			"app/brick",
+		       "gameMath"],
+		       function(fabric, math, model, Paddle, Ball, Brick, gameMath) {
+
+			   // For some reason fabric doesn't need to be set to window obj
+			   // window.fabric = fabric;
+			   window.math = math;
+			   window.model = model;
+			   window.Paddle = Paddle;
+			   window.Ball = Ball;
+			   window.Brick = Brick;
+			   window.gameMath = gameMath;
+			   
 			   initialize();
 			   addListeners();
 			   
@@ -18,11 +23,13 @@ Window.onload = define(["fabric.min",
 			   userReady(game);
 		       });
 
+var gameMath = window.gameMath;
+
 // for 30 frames a second
 var MS_PER_UPDATE = 1000 / 30;
 
 // for now I don't want these dynamically changed
-var BALL_RADIUS = 15;
+var BALL_RADIUS = 5;
 var PADDLE_LENGTH = 80;
 var PADDLE_WIDTH = 20;
 var BRICK_WIDTH = 45;
@@ -69,7 +76,7 @@ var game = function(time) {
 var initialize = function () {
      
     canvas = new fabric.Canvas('game', {stateful: false, renderOnAddRemove: false});
-    Window.canvas = canvas;
+    window.canvas = canvas;
     canvas.backgroundColor = "grey";
     var canvasWidth = canvas.getWidth();
     var canvasHeight = canvas.getHeight();
@@ -78,17 +85,17 @@ var initialize = function () {
     makeArrayOfBlocks();
 
     // TODO initialize paddle and ball start positions
-    Window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
+    window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
     canvas.add(paddle.fabricPaddle);
 
-    Window.ball = ball = new Ball(10, 9,
+    window.ball = ball = new Ball(10, 9,
 				  {radius: BALL_RADIUS,
 				   fill: 'green',
 				   originX: 'center',
 				   originY: 'center',
 				   transformMatrix: [1, 0,  0, 1, 0, 0]
 				  });
-    canvas.add(ball.fabricBall)
+    canvas.add(ball.fabricBall);
 }
 
 var makeRowOfBlocks = function(verticalOffset) {
@@ -106,7 +113,7 @@ var makeRowOfBlocks = function(verticalOffset) {
 	    height: BRICK_HEIGHT,
 	    transformMatrix: [1,0,  0,1,  brickCenterX, brickCenterY]};
 	
-    	canvas.add(new Window.Brick(fabricObj).fabricRect);
+    	canvas.add(new Brick(fabricObj).fabricRect);
     };
 }
 
@@ -171,64 +178,178 @@ var courtCollision = function() {
     }
 }
 
-var deleteCollidedBrick = function(obj) {
+var ballAndBrickCollisionHandler = function(obj) {
     var brickCollision = false;
     if (obj.type === "rect") {
-	brickCollision = ballBrickCollision(ball.fabricBall, obj);
+	brickCollision = ballBrickCollision(ball, obj);
 	if (brickCollision) {
 	    canvas.remove(obj);
+	    ballRepositionFromCollision();
+	    changeBallFromCollision(ball, brickCollision);
 	}
     }
 }
 
-var testVar = 1;
+var ballRepositionFromCollision = function() {
+    
+}
+
+var changeBallFromCollision = function(ball, collisionObj) {
+    console.log(collisionObj.type);
+    switch(collisionObj.type) {
+    case "vertical":
+	ball.dy = -ball.dy;
+	break;
+    case "horizontal":
+	ball.dx = -ball.dx;
+	break;
+
+    case "corner":
+	ball.dx = -ball.dx;
+	ball.dy = -ball.dy;
+	break;
+
+    default:
+	//throw "Undefined collision type!"
+    }
+}
+
+
 var update = function(elapsed) {
     courtCollision();
 
     // canvas only holds canvas objects..should I extend them in my own prototypes?
     var testBrick = canvas._objects[0];
     testBrick.set("fill", "red");
-    canvas.forEachObject(deleteCollidedBrick);
+    canvas.forEachObject(ballAndBrickCollisionHandler);
 }
 
-// From http://stackoverflow.com/a/402010 checkout the picture to visualize
+
 // this function can return an object with all the types of collisions
 // pass in the fabricBall
-var ballBrickCollision = function (circle, rectangle) {
-    // Get center distances between ball and rectangle
-    var xCentersDistance = Math.abs(getMatrixX(circle) - getMatrixX(rectangle));
-    var yCentersDistance = Math.abs(getMatrixY(circle) - getMatrixY(rectangle));
+var testVar = 25;
+var ballBrickCollision = function (ball, rect) {
+    var circle = ball.fabricBall;
+    var radius = circle.radius;
+    // Get center distances between ball's future position and rect
+    var xCentersDistance = Math.abs(getMatrixX(circle) + ball.dx - getMatrixX(rect));
+    var yCentersDistance = Math.abs(getMatrixY(circle) + ball.dy - getMatrixY(rect));
 
-    // collision is impossible because brick and circle
-    // are horizontally too distant from each other
-    if (xCentersDistance > (rectangle.width/2 + circle.radius)) {
-	return false;
+    // This pair of checks does not do any line intersection testing
+    if (xCentersDistance > (rect.width/2 + radius)) { return false; }
+    if (yCentersDistance > (rect.height/2 + radius)) { return false; }
+    
+    // Line Intersection testing begins
+    var ballPosX = getMatrixX(circle);
+    var ballPosY = getMatrixY(circle);
+    var ballTrajectory = {
+	x1: ballPosX,
+	y1: ballPosY,
+	x2: ballPosX + ball.dx,
+	y2: ballPosY + ball.dy
     }
 
-    // collision is impossible like above, but for the vertical dim.
-    if (yCentersDistance > (rectangle.height/2 + circle.radius)) {
-	return false;
+    var intersectPt = null;
+    
+    var brickPosX = getMatrixX(rect);
+    var brickPosY = getMatrixY(rect);
+
+    // optimize this with if statments later
+    // only hits top segment if ball is going downward
+    var topSegment = {
+	x1: brickPosX - rect.width/2,
+	y1: brickPosY - rect.height/2 - radius,
+	x2: brickPosX + rect.width/2,
+	y2: brickPosY - rect.height/2 - radius,
+    };
+    
+    intersectPt = gameMath.intersect(ballTrajectory, topSegment);
+    if (intersectPt) {
+	return { type: "vertical" };
+    }
+    
+    var botSegment = {
+	x1: brickPosX - rect.width/2,
+	y1: brickPosY + rect.height/2 + radius,
+	x2: brickPosX + rect.width/2,
+	y2: brickPosY + rect.height/2 + radius,
     }
 
-    // xCenterDistance at this point is <= rectangle.width/2 + circle.radius
-    // or the ball is at the corner.
-    if (xCentersDistance <= rectangle.width/2) {return true;}
-    if (yCentersDistance <= rectangle.height/2) {return true;}
-
-    // corner collision, distance between center of circle and corner
-    var xCornerDistance = xCentersDistance - rectangle.width/2;
-    var yCornerDistance = yCentersDistance - rectangle.height/2
-
-    // Check the diagonal of the square. The square is created
-    // by the xCornerDistance and the yCornerDistance. Compare to radius.
-    if (xCornerDistance*xCornerDistance + yCornerDistance*yCornerDistance
-	<= circle.radius*circle.radius) {
-	return true;
-    } else {
-	return false;
+    intersectPt = gameMath.intersect(ballTrajectory, botSegment);
+    if (intersectPt) {
+	return { type: "vertical" }
     }
 
-    throw "Collision Detection doesn't catch all cases!";
+    var leftSegment = {
+	x1: brickPosX - rect.width/2 - radius,
+	y1: brickPosY - rect.height/2,
+	x2: brickPosX - rect.width/2 - radius,
+	y2: brickPosY + rect.height/2,
+    }
+
+    if (intersectPt) {
+	return { type: "horizontal" };
+    }
+
+    intersectPt = gameMath.intersect(ballTrajectory, leftSegment);
+
+    var rightSegment = {
+	x1: brickPosX + rect.width/2 + radius,
+	y1: brickPosY - rect.height/2,
+	x2: brickPosX + rect.width/2 + radius,
+	y2: brickPosY + rect.height/2,
+    }
+
+    intersectPt = gameMath.intersect(ballTrajectory, rightSegment);
+
+    if (intersectPt) {
+	return { type: "horizontal" };
+    }
+    
+    // DEBUG ONLY
+    var fabBotLine = new fabric.Line(
+	[botSegment.x1, botSegment.y1,
+	 botSegment.x2, botSegment.y2],
+	{fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'});
+    var fabTopLine = new fabric.Line(
+	[topSegment.x1, topSegment.y1,
+	 topSegment.x2, topSegment.y2],
+	{fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'});
+    var fabLeftLine = new fabric.Line(
+	[leftSegment.x1, leftSegment.y1,
+	 leftSegment.x2, leftSegment.y2],
+	{fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'});
+    var fabRightLine = new fabric.Line(
+	[rightSegment.x1, rightSegment.y1,
+	 rightSegment.x2, rightSegment.y2],
+	{fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'});
+
+    canvas.add(fabTopLine)
+	.add(fabBotLine)
+	.add(fabLeftLine)
+	.add(fabRightLine);
+    
+    canvas.remove(fabTopLine)
+	.remove(fabBotLine)
+	.remove(fabLeftLine)
+	.remove(fabRightLine);
+    // TODO: Line segment intersections with circles
+    // to catch corner cases.
+    var topRightArc;
+    var topLeftArc;
+    var botLeftArc;
+    var botRightArc;
+
+    
+    
+    if (testVar) {
+	testVar--;
+	// canvas.add(new fabric.Line(
+	//     [bottomSegment.x1, bottomSegment.y1,
+	//      bottomSegment.x2, bottomSegment.y2],
+	//     {fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'}));
+    }
+    //throw "Collision Detection doesn't catch all cases!";
 }
 
 var updatePaddle = function(matrix){
@@ -255,8 +376,8 @@ var translatePaddle = function() {
 	// example of matrix multiplication
 	var translate = [1, 0, 0, 1, dx, dy];
 	var newTranslate = fabric.util.multiplyTransformMatrices(
-	    Window.paddle.fabricPaddle.transformMatrix, translate);
-	 Window.paddle.fabricPaddle.transformMatrix = newTranslate;
+	    paddle.fabricPaddle.transformMatrix, translate);
+	 paddle.fabricPaddle.transformMatrix = newTranslate;
 	
 	previousMouseCoord = currentMouseCoords;
     }, false);    
