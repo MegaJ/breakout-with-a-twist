@@ -180,18 +180,22 @@ var courtCollision = function() {
 
 var ballAndBrickCollisionHandler = function(obj) {
     var brickCollision = false;
+    var testVari = 0;
     if (obj.type === "rect") {
+	console.log("Currently on iteration ", 0);
+	testVari++;
 	brickCollision = ballBrickCollision(ball, obj);
 	if (brickCollision) {
 	    canvas.remove(obj);
-	    ballRepositionFromCollision();
+	    ballRepositionFromCollision(brickCollision);
 	    changeBallFromCollision(ball, brickCollision);
 	}
     }
 }
 
-var ballRepositionFromCollision = function() {
-    
+var ballRepositionFromCollision = function(collisionObj) {
+    ball.fabricBall.transformMatrix =
+    	[0,1, 1,0, collisionObj.x, collisionObj.y];
 }
 
 var changeBallFromCollision = function(ball, collisionObj) {
@@ -214,6 +218,31 @@ var changeBallFromCollision = function(ball, collisionObj) {
     }
 }
 
+var debugDrawLine = (function() {
+    
+    var dbgLCount = 0;
+    return function (opts, x1, y1, x2, y2) {	
+	var dbgLineName = "dbgL_" + dbgLCount;
+	dbgLCount++;
+
+	if (opts) {
+	    window[dbgLineName] = new fabric.Line(
+		[opts.x1, opts.y1,
+		 opts.x2, opts.y2],
+		{stroke: "yellow", originX: 'left', originY: 'top'});
+	    
+	} else {
+	    window[dbgLineName] = new fabric.Line(
+		[x1, y1,
+		 x2, y2],
+		{stroke: "yellow", originX: 'left', originY: 'top'});
+	}
+	
+	return canvas.add(window[dbgLineName]);
+    }
+    
+})();
+
 
 var update = function(elapsed) {
     courtCollision();
@@ -231,6 +260,7 @@ var testVar = 25;
 var ballBrickCollision = function (ball, rect) {
     var circle = ball.fabricBall;
     var radius = circle.radius;
+    
     // Get center distances between ball's future position and rect
     var xCentersDistance = Math.abs(getMatrixX(circle) + ball.dx - getMatrixX(rect));
     var yCentersDistance = Math.abs(getMatrixY(circle) + ball.dy - getMatrixY(rect));
@@ -249,85 +279,103 @@ var ballBrickCollision = function (ball, rect) {
 	y2: ballPosY + ball.dy
     }
 
-    var intersectPt = null;
+    debugDrawLine(ballTrajectory);
+
+    
     
     var brickPosX = getMatrixX(rect);
     var brickPosY = getMatrixY(rect);
 
     // optimize this with if statments later
-    // only hits top segment if ball is going downward
+
     var topSegment = {
-	x1: brickPosX - rect.width/2,
-	y1: brickPosY - rect.height/2 - radius,
-	x2: brickPosX + rect.width/2,
-	y2: brickPosY - rect.height/2 - radius,
+	    x1: brickPosX - rect.width/2 - radius, //
+	    y1: brickPosY - rect.height/2 - radius,
+	    x2: brickPosX + rect.width/2 + radius, //
+	    y2: brickPosY - rect.height/2 - radius,
     };
     
-    intersectPt = gameMath.intersect(ballTrajectory, topSegment);
-    if (intersectPt) {
-	return { type: "vertical" };
-    }
-    
+    var topSegment = {
+	    x1: brickPosX - rect.width/2 - radius, //
+	    y1: brickPosY - rect.height/2 - radius,
+	    x2: brickPosX + rect.width/2 + radius, //
+	    y2: brickPosY - rect.height/2 - radius,
+    };
+
     var botSegment = {
-	x1: brickPosX - rect.width/2,
+	x1: brickPosX - rect.width/2 - radius, //
 	y1: brickPosY + rect.height/2 + radius,
-	x2: brickPosX + rect.width/2,
+	x2: brickPosX + rect.width/2 + radius, //
 	y2: brickPosY + rect.height/2 + radius,
     }
 
-    intersectPt = gameMath.intersect(ballTrajectory, botSegment);
-    if (intersectPt) {
-	return { type: "vertical" }
+    var rightSegment = {
+	x1: brickPosX + rect.width/2 + radius,
+	y1: brickPosY - rect.height/2 - radius, //
+	x2: brickPosX + rect.width/2 + radius,
+	y2: brickPosY + rect.height/2 + radius, //
     }
 
     var leftSegment = {
 	x1: brickPosX - rect.width/2 - radius,
-	y1: brickPosY - rect.height/2,
+	y1: brickPosY - rect.height/2 - radius, //
 	x2: brickPosX - rect.width/2 - radius,
-	y2: brickPosY + rect.height/2,
+	y2: brickPosY + rect.height/2 + radius, //
     }
 
-    if (intersectPt) {
-	return { type: "horizontal" };
+    debugDrawLine(topSegment);
+    debugDrawLine(botSegment);
+    debugDrawLine(leftSegment);
+    debugDrawLine(rightSegment);
+
+    var intersectPt = null;
+    // ball goes downwards
+    if (ball.dy > 0) {
+	
+	
+	intersectPt = gameMath.intersect(ballTrajectory, topSegment);
+	if (intersectPt) {
+	    intersectPt.type = "vertical";
+	    return intersectPt;
+	}
     }
 
-    intersectPt = gameMath.intersect(ballTrajectory, leftSegment);
+    
+    // upwards
+    if (ball.dy < 0) {
 
-    var rightSegment = {
-	x1: brickPosX + rect.width/2 + radius,
-	y1: brickPosY - rect.height/2,
-	x2: brickPosX + rect.width/2 + radius,
-	y2: brickPosY + rect.height/2,
+
+	intersectPt = gameMath.intersect(ballTrajectory, botSegment);
+	if (intersectPt) {
+	    intersectPt.type = "vertical";
+	    return intersectPt;
+	}
     }
+
+
+    
+    if (ball.dx > 0) {
+
+	
+	intersectPt = gameMath.intersect(ballTrajectory, leftSegment);
+	if (intersectPt) {
+	    intersectPt.type = "horizontal";
+	    return intersectPt;
+	}
+    }
+
+    // ball is probably going leftwards (dx < 0)
+    
 
     intersectPt = gameMath.intersect(ballTrajectory, rightSegment);
 
     if (intersectPt) {
-	return { type: "horizontal" };
+	intersectPt.type = "horizontal";
+	return intersectPt;
     }
     
     // DEBUG ONLY
-    var fabBotLine = new fabric.Line(
-	[botSegment.x1, botSegment.y1,
-	 botSegment.x2, botSegment.y2],
-	{fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'});
-    var fabTopLine = new fabric.Line(
-	[topSegment.x1, topSegment.y1,
-	 topSegment.x2, topSegment.y2],
-	{fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'});
-    var fabLeftLine = new fabric.Line(
-	[leftSegment.x1, leftSegment.y1,
-	 leftSegment.x2, leftSegment.y2],
-	{fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'});
-    var fabRightLine = new fabric.Line(
-	[rightSegment.x1, rightSegment.y1,
-	 rightSegment.x2, rightSegment.y2],
-	{fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'});
-
-    canvas.add(fabTopLine)
-	.add(fabBotLine)
-	.add(fabLeftLine)
-	.add(fabRightLine);
+    
     
     canvas.remove(fabTopLine)
 	.remove(fabBotLine)
@@ -349,7 +397,7 @@ var ballBrickCollision = function (ball, rect) {
 	//      bottomSegment.x2, bottomSegment.y2],
 	//     {fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'}));
     }
-    //throw "Collision Detection doesn't catch all cases!";
+    throw "Collision Detection doesn't catch all cases!";
 }
 
 var updatePaddle = function(matrix){
