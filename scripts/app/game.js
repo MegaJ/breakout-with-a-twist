@@ -189,19 +189,39 @@ var courtCollision = function() {
     }
 }
 
-var ballAndBrickCollisionHandler = function(obj) {
-    var brickCollision = false;
-    var testVari = 0;
+/**
+   Keeps only the collisions with the smallest distance
+   from the ball's current position.
+
+   modifies arrayOfCollisions which is passed in inside update()
+**/
+var findBallBrickCollisions = function(obj, arrayOfCollisions) {
     if (obj.type === "rect") {
-	console.log("Currently on iteration ", 0);
-	testVari++;
-	brickCollision = ballBrickCollision(ball, obj);
+	
+	var brickCollision = ballBrickCollision(ball, obj);
+
 	if (brickCollision) {
-	    canvas.remove(obj);
-	    ballRepositionFromCollision(brickCollision);
-	    changeBallFromCollision(ball, brickCollision);
+
+	    // in order to know which rectangle the collision was with
+	    // so we can remove it later inside update()
+	    brickCollision.rect = obj; 
+	    
+	    if (arrayOfCollisions.length === 0) {
+		arrayOfCollisions.push(brickCollision)
+	    }
+	    
+	    else if (brickCollision.d < arrayOfCollisions[0].d) {
+		obj.fill = 'blue'; // debug
+		arrayOfCollisions = [brickCollision];
+	    }
+
+	    else if (brickCollision.d === arrayCollisions[0].d) {
+		arrayOfCollisions.push(brickCollision);
+	    }
 	}
     }
+    
+    return arrayOfCollisions;
 }
 
 var ballRepositionFromCollision = function(collisionObj) {
@@ -230,31 +250,6 @@ var changeBallFromCollision = function(ball, collisionObj) {
     }
 }
 
-var debugDrawLine = (function() {
-    
-    var dbgLCount = 0;
-    return function (opts, x1, y1, x2, y2) {	
-	var dbgLineName = "dbgL_" + dbgLCount;
-	dbgLCount++;
-
-	if (opts) {
-	    window[dbgLineName] = new fabric.Line(
-		[opts.x1, opts.y1,
-		 opts.x2, opts.y2],
-		{stroke: "yellow", originX: 'left', originY: 'top'});
-	    
-	} else {
-	    window[dbgLineName] = new fabric.Line(
-		[x1, y1,
-		 x2, y2],
-		{stroke: "yellow", originX: 'left', originY: 'top'});
-	}
-	
-	return canvas.add(window[dbgLineName]);
-    }
-    
-})();
-
 
 var update = function(elapsed) {
     courtCollision();
@@ -262,10 +257,24 @@ var update = function(elapsed) {
     // canvas only holds canvas objects..should I extend them in my own prototypes?
     var testBrick = canvas._objects[0];
     testBrick.set("fill", "red");
-    canvas.forEachObject(ballAndBrickCollisionHandler);
-
-    // TODO: Prioritize which line intersections to act on
     
+    var collisions = [];
+    canvas.forEachObject(function(obj) {
+	collisions = findBallBrickCollisions(obj, collisions);
+    });
+
+    console.log(collisions);
+    // Determine the closest collisions (more than 1 is rare, but possible)
+    if (collisions.length > 0) {
+	
+	for(var i=0; i < collisions.length; i++) {
+	    canvas.remove(collisions[i].rect);
+	    delete collisions[i].rect;
+	}
+	
+	ballRepositionFromCollision(collisions[0]);
+	changeBallFromCollision(ball, collisions[0]);
+    }
 }
 
 
@@ -277,6 +286,7 @@ var ballBrickCollision = function (ball, rect) {
     var radius = circle.radius;
     
     // Get center distances between ball's future position and rect
+    // Follows the early exit idea from http://stackoverflow.com/a/402010
     var xCentersDistance = Math.abs(getMatrixX(circle) + ball.dx - getMatrixX(rect));
     var yCentersDistance = Math.abs(getMatrixY(circle) + ball.dy - getMatrixY(rect));
 
@@ -440,17 +450,17 @@ var currentMouseCoords = {x: 0, y: 0};
 
 var translatePaddle = function() {
      canvas.on('mouse:move', function(evt) {
-	var currentMouseCoords = getMouseCoords(evt);
-	var dx = currentMouseCoords.x - previousMouseCoord.x;
-	var dy = currentMouseCoords.y - previousMouseCoord.y;
-	// example of matrix multiplication
-	var translate = [1, 0, 0, 1, dx, dy];
-	var newTranslate = fabric.util.multiplyTransformMatrices(
-	    paddle.fabricPaddle.transformMatrix, translate);
+	 var currentMouseCoords = getMouseCoords(evt);
+	 var dx = currentMouseCoords.x - previousMouseCoord.x;
+	 var dy = currentMouseCoords.y - previousMouseCoord.y;
+	 previousMouseCoord = currentMouseCoords;
+	 
+	 var translate = [1, 0, 0, 1, dx, dy];
+	 var newTranslate = fabric.util.multiplyTransformMatrices(
+	     paddle.fabricPaddle.transformMatrix, translate);
+	 
 	 paddle.fabricPaddle.transformMatrix = newTranslate;
-	
-	previousMouseCoord = currentMouseCoords;
-    }, false);    
+     }, false);    
 }
 
 var morphPaddle = function() {
@@ -472,3 +482,28 @@ var getMouseCoords = function(event) {
 	y: pointer.y
     }; 
 }
+
+var debugDrawLine = (function() {
+    
+    var dbgLCount = 0;
+    return function (opts, x1, y1, x2, y2) {	
+	var dbgLineName = "dbgL_" + dbgLCount;
+	dbgLCount++;
+
+	if (opts) {
+	    window[dbgLineName] = new fabric.Line(
+		[opts.x1, opts.y1,
+		 opts.x2, opts.y2],
+		{stroke: "yellow", originX: 'left', originY: 'top'});
+	    
+	} else {
+	    window[dbgLineName] = new fabric.Line(
+		[x1, y1,
+		 x2, y2],
+		{stroke: "yellow", originX: 'left', originY: 'top'});
+	}
+	
+	return canvas.add(window[dbgLineName]);
+    }
+    
+})();
