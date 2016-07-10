@@ -99,7 +99,7 @@ var initialize = function () {
     window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
     canvas.add(paddle.fabricPaddle);
 
-    window.ball = ball = new Ball(10, 9,
+    window.ball = ball = new Ball(10/5, 9/5,
 				  {radius: BALL_RADIUS,
 				   fill: 'green',
 				   originX: 'center',
@@ -163,6 +163,11 @@ var courtCollision = function() {
     ballPosX = outOfBoundsLeft ? 0 + BALL_RADIUS : ballPosX;
     ball.dx = outOfHorizontalBounds ? -ball.dx : ball.dx;
 
+    if (outOfHorizontalBounds) {
+	console.log("out of horizontal bounds, prev ball.dx:", -ball.dx);
+	console.log("current ball.dx: ", ball.dx);
+    }
+
     var outOfBoundsTop = ballPosY + ball.dy > canvas.height - BALL_RADIUS;
     var outOfBoundsBottom = ballPosY + ball.dy < 0 + BALL_RADIUS;
     var outOfVerticalBounds = outOfBoundsTop || outOfBoundsBottom;
@@ -179,13 +184,15 @@ var courtCollision = function() {
      */
     if (outOfBounds) {
 	ball.fabricBall.transformMatrix = [1, 0,  0, 1,  ballPosX, ballPosY];
+	return true;
     } else {
+
+	// TODO: Do not update this until all collisions have
+	// been dealt with. Might cause bugs. This comment is bad. I am sleepy.
+	// Sometimes the ball's position updates and goes inside other
+	// bounding rectangles, making the collision detection screwy
 	
-	var translate = [1, 0, 0, 1, ball.dx, ball.dy];
-	var newTranslate = fabric.util.
-    	    multiplyTransformMatrices(ball.fabricBall.transformMatrix,
-    				      translate);
-	ball.fabricBall.transformMatrix = newTranslate;
+	
     }
 }
 
@@ -197,7 +204,7 @@ var courtCollision = function() {
 **/
 var findBallBrickCollisions = function(obj, arrayOfCollisions) {
     if (obj.type === "rect") {
-	
+
 	var brickCollision = ballBrickCollision(ball, obj);
 
 	if (brickCollision) {
@@ -205,13 +212,12 @@ var findBallBrickCollisions = function(obj, arrayOfCollisions) {
 	    // in order to know which rectangle the collision was with
 	    // so we can remove it later inside update()
 	    brickCollision.rect = obj; 
-	    
+
 	    if (arrayOfCollisions.length === 0) {
 		arrayOfCollisions.push(brickCollision)
 	    }
-	    
+
 	    else if (brickCollision.d < arrayOfCollisions[0].d) {
-		obj.fill = 'blue'; // debug
 		arrayOfCollisions = [brickCollision];
 	    }
 
@@ -226,7 +232,7 @@ var findBallBrickCollisions = function(obj, arrayOfCollisions) {
 
 var ballRepositionFromCollision = function(collisionObj) {
     ball.fabricBall.transformMatrix =
-    	[0,1, 1,0, collisionObj.x, collisionObj.y];
+    	[1,0, 0,1, collisionObj.x, collisionObj.y];
 }
 
 var changeBallFromCollision = function(ball, collisionObj) {
@@ -236,6 +242,7 @@ var changeBallFromCollision = function(ball, collisionObj) {
 	ball.dy = -ball.dy;
 	break;
     case "horizontal":
+	console.log('inverting ball.dx')
 	ball.dx = -ball.dx;
 	break;
 
@@ -252,7 +259,10 @@ var changeBallFromCollision = function(ball, collisionObj) {
 
 
 var update = function(elapsed) {
-    courtCollision();
+
+    if (courtCollision()) {
+	return;
+    }
 
     // canvas only holds canvas objects..should I extend them in my own prototypes?
     var testBrick = canvas._objects[0];
@@ -263,7 +273,6 @@ var update = function(elapsed) {
 	collisions = findBallBrickCollisions(obj, collisions);
     });
 
-    console.log(collisions);
     // Determine the closest collisions (more than 1 is rare, but possible)
     if (collisions.length > 0) {
 	
@@ -274,7 +283,15 @@ var update = function(elapsed) {
 	
 	ballRepositionFromCollision(collisions[0]);
 	changeBallFromCollision(ball, collisions[0]);
+	return;
     }
+
+    // update ball position at the end.
+    var translate = [1, 0, 0, 1, ball.dx, ball.dy];
+    var newTranslate = fabric.util.
+    	multiplyTransformMatrices(ball.fabricBall.transformMatrix,
+    				  translate);
+    ball.fabricBall.transformMatrix = newTranslate;
 }
 
 
