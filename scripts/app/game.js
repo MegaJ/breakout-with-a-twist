@@ -99,7 +99,7 @@ var initialize = function () {
     window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
     canvas.add(paddle.fabricPaddle);
 
-    window.ball = ball = new Ball(10/5, 9/5,
+    window.ball = ball = new Ball(10, 9,
 				  {radius: BALL_RADIUS,
 				   fill: 'green',
 				   originX: 'center',
@@ -221,7 +221,7 @@ var findBallBrickCollisions = function(obj, arrayOfCollisions) {
 		arrayOfCollisions = [brickCollision];
 	    }
 
-	    else if (brickCollision.d === arrayCollisions[0].d) {
+	    else if (brickCollision.d === arrayOfCollisions[0].d) {
 		arrayOfCollisions.push(brickCollision);
 	    }
 	}
