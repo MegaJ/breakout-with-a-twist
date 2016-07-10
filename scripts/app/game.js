@@ -4,7 +4,13 @@ Window.onload = define(["fabric.min",
 			"app/paddle",
 			"app/ball",
 			"app/brick",
-		       "gameMath"],
+			"gameMath"],
+
+		       /**
+			  I didn't want to wrap everything in this callback
+			  Because I didn't want the +1 level of indentation
+			  for the entire file.
+			**/
 		       function(fabric, math, model, Paddle, Ball, Brick, gameMath) {
 
 			   // For some reason fabric doesn't need to be set to window obj
@@ -49,7 +55,7 @@ var userReady = function() {
 }
 
 
-// game runs at a series of fixed time steps\
+// game runs at a series of fixed time steps
 // the game function relies on requestAnimationFrame
 // to invoke it as a callback. rAF will pass in a high res times stamp
 var game = function(time) {
@@ -84,7 +90,12 @@ var initialize = function () {
 
     makeArrayOfBlocks();
 
-    // TODO initialize paddle and ball start positions
+    /** 
+	TODO: initialize paddle and ball start positions.
+	TODO: Maybe figure out a way to separate debug version
+	from production version. Don't make paddle and ball global
+	in the production version.
+     **/
     window.paddle = paddle = new Paddle(PADDLE_LENGTH, PADDLE_WIDTH, 30);
     canvas.add(paddle.fabricPaddle);
 
@@ -208,6 +219,7 @@ var changeBallFromCollision = function(ball, collisionObj) {
 	ball.dx = -ball.dx;
 	break;
 
+	
     case "corner":
 	ball.dx = -ball.dx;
 	ball.dy = -ball.dy;
@@ -251,6 +263,9 @@ var update = function(elapsed) {
     var testBrick = canvas._objects[0];
     testBrick.set("fill", "red");
     canvas.forEachObject(ballAndBrickCollisionHandler);
+
+    // TODO: Prioritize which line intersections to act on
+    
 }
 
 
@@ -286,7 +301,14 @@ var ballBrickCollision = function (ball, rect) {
     var brickPosX = getMatrixX(rect);
     var brickPosY = getMatrixY(rect);
 
-    // optimize this with if statments later
+    /**
+       TODO: optimize the structure of this function
+       once you have debugged it satisfactorily
+       
+       TODO: replace the brick boundaries which are currently
+       rectangles, with rounded rectangles. This means you
+       need circle-line segment intersection testing.
+    **/
 
     var topSegment = {
 	    x1: brickPosX - rect.width/2 - radius, //
