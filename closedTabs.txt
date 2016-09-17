@@ -1,0 +1,7 @@
+http://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection/402010#402010
+http://stackoverflow.com/questions/11743392/check-if-array-is-empty-or-exists
+http://cryto.net/~joepie91/blog/2015/05/04/functional-programming-in-javascript-map-filter-reduce/
+http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-line-intersection-and-its-applications/
+http://stackoverflow.com/questions/2544431/collision-detection-of-huge-number-of-circles?rq=1
+

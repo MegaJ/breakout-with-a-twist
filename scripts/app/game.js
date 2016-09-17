@@ -30,6 +30,7 @@ Window.onload = define(["fabric.min",
 		       });
 
 var gameMath = window.gameMath;
+var gameWidth = window.innerWidth - getScrollbarWidth();
 
 // for 30 frames a second
 var MS_PER_UPDATE = 1000 / 30;
@@ -68,10 +69,11 @@ var game = function(time) {
     
     processInput();
 
-    while (LAG >= MS_PER_UPDATE) {
+    update(); // delete this call when not debugging, and use while loop
+    /**while (LAG >= MS_PER_UPDATE) {
 	update(); // if there is a collision, should I force a render?
 	LAG -= MS_PER_UPDATE;
-    }
+    }**/
 
     // beware of possible negative LAG
     render(LAG / MS_PER_UPDATE); // interpolation of rendering
@@ -81,8 +83,15 @@ var game = function(time) {
 
 var initialize = function () {
      
-    canvas = new fabric.Canvas('game', {stateful: false, renderOnAddRemove: false});
+    canvas = new fabric.Canvas('game', {stateful: false,
+					renderOnAddRemove: false,
+					width: gameWidth,
+					height: 500
+				       });
     window.canvas = canvas;
+
+
+    
     canvas.backgroundColor = "grey";
     var canvasWidth = canvas.getWidth();
     var canvasHeight = canvas.getHeight();
@@ -109,8 +118,34 @@ var initialize = function () {
     canvas.add(ball.fabricBall);
 }
 
+// courtesy of https://stackoverflow.com/questions/13382516/getting-scroll-bar-width-using-javascript
+function getScrollbarWidth() {
+    var outer = document.createElement("div");
+    outer.style.visibility = "hidden";
+    outer.style.width = "100px";
+    outer.style.msOverflowStyle = "scrollbar"; // needed for WinJS apps
+
+    document.body.appendChild(outer);
+
+    var widthNoScroll = outer.offsetWidth;
+    // force scrollbars
+    outer.style.overflow = "scroll";
+
+    // add innerdiv
+    var inner = document.createElement("div");
+    inner.style.width = "100%";
+    outer.appendChild(inner);        
+
+    var widthWithScroll = inner.offsetWidth;
+
+    // remove divs
+    outer.parentNode.removeChild(outer);
+
+    return widthNoScroll - widthWithScroll;
+}
+
 var makeRowOfBlocks = function(verticalOffset) {
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 20; i++) {
 
 	// center each rectangle at (0,0)
 	// then transform it to the correct location in view space
@@ -134,7 +169,11 @@ var makeArrayOfBlocks = function(){
     }
 }
 
-// Using listeners instead
+/**
+   TODO: listeners might not be a good idea
+   May lead to state when the ball is inside another
+   graphical object.
+**/
 var processInput = function() {
     
 }
@@ -147,7 +186,7 @@ var getMatrixY = function(fabricObj) {
     return fabricObj.transformMatrix[5];
 }
 
-// courtCollision is preemptive: if the ball will hit something
+// courtCollision is preemptive: if the ball will hit the bounds
 // the ball is set to a position where it makes contact with the wall
 // and it's direction is reversed
 var courtCollision = function() {
@@ -163,11 +202,6 @@ var courtCollision = function() {
     ballPosX = outOfBoundsLeft ? 0 + BALL_RADIUS : ballPosX;
     ball.dx = outOfHorizontalBounds ? -ball.dx : ball.dx;
 
-    if (outOfHorizontalBounds) {
-	console.log("out of horizontal bounds, prev ball.dx:", -ball.dx);
-	console.log("current ball.dx: ", ball.dx);
-    }
-
     var outOfBoundsTop = ballPosY + ball.dy > canvas.height - BALL_RADIUS;
     var outOfBoundsBottom = ballPosY + ball.dy < 0 + BALL_RADIUS;
     var outOfVerticalBounds = outOfBoundsTop || outOfBoundsBottom;
@@ -178,21 +212,14 @@ var courtCollision = function() {
 
     var outOfBounds = outOfVerticalBounds || outOfHorizontalBounds;
 
-    /* Set position explicitly to be inbounds. 
+    /* Set position explicitly to be inbounds. So next call, this
+     * function will return false.
      * On next update, the ball's dx and dy will have been set
-     * from the previous call to courtCollision, and jump to the else block
+     * by this function.
      */
     if (outOfBounds) {
 	ball.fabricBall.transformMatrix = [1, 0,  0, 1,  ballPosX, ballPosY];
 	return true;
-    } else {
-
-	// TODO: Do not update this until all collisions have
-	// been dealt with. Might cause bugs. This comment is bad. I am sleepy.
-	// Sometimes the ball's position updates and goes inside other
-	// bounding rectangles, making the collision detection screwy
-	
-	
     }
 }
 
@@ -216,12 +243,13 @@ var findBallBrickCollisions = function(obj, arrayOfCollisions) {
 	    if (arrayOfCollisions.length === 0) {
 		arrayOfCollisions.push(brickCollision)
 	    }
-
-	    else if (brickCollision.d < arrayOfCollisions[0].d) {
+	    // avoid floating point round errors that happen
+	    // if difference between values is big enough, collisions only holds smallest distance collision
+	    else if (0.000001 < arrayOfCollisions[0].d - brickCollision.d) {
 		arrayOfCollisions = [brickCollision];
 	    }
 
-	    else if (brickCollision.d === arrayOfCollisions[0].d) {
+	    else if (brickCollision.d === arrayOfCollisions[0].d) { //TODO: ball 
 		arrayOfCollisions.push(brickCollision);
 	    }
 	}
@@ -230,30 +258,28 @@ var findBallBrickCollisions = function(obj, arrayOfCollisions) {
     return arrayOfCollisions;
 }
 
-var ballRepositionFromCollision = function(collisionObj) {
+var moveBallToIntersection = function(collisionObj) {
     ball.fabricBall.transformMatrix =
     	[1,0, 0,1, collisionObj.x, collisionObj.y];
 }
 
-var changeBallFromCollision = function(ball, collisionObj) {
-    console.log(collisionObj.type);
+var updateBallVelocityFromCollision = function(ball, collisionObj) {
+    console.log(collisionObj.type); // debug
     switch(collisionObj.type) {
+
     case "vertical":
 	ball.dy = -ball.dy;
 	break;
     case "horizontal":
-	console.log('inverting ball.dx')
 	ball.dx = -ball.dx;
 	break;
-
-	
     case "corner":
 	ball.dx = -ball.dx;
 	ball.dy = -ball.dy;
 	break;
 
     default:
-	//throw "Undefined collision type!"
+	throw "Undefined collision type!"
     }
 }
 
@@ -269,7 +295,9 @@ var update = function(elapsed) {
     testBrick.set("fill", "red");
     
     var collisions = [];
-    canvas.forEachObject(function(obj) {
+
+    // this forEachObject may be failing?
+    canvas._objects.forEach(function(obj) {
 	collisions = findBallBrickCollisions(obj, collisions);
     });
 
@@ -277,16 +305,17 @@ var update = function(elapsed) {
     if (collisions.length > 0) {
 	
 	for(var i=0; i < collisions.length; i++) {
+	    collisions[i].rect.set("fill", "blue");
 	    canvas.remove(collisions[i].rect);
-	    delete collisions[i].rect;
+	    //delete collisions[i].rect;
 	}
 	
-	ballRepositionFromCollision(collisions[0]);
-	changeBallFromCollision(ball, collisions[0]);
+	moveBallToIntersection(collisions[0]);
+	updateBallVelocityFromCollision(ball, collisions[0]);
 	return;
     }
 
-    // update ball position at the end.
+    // Update ball position if and only if no collisions
     var translate = [1, 0, 0, 1, ball.dx, ball.dy];
     var newTranslate = fabric.util.
     	multiplyTransformMatrices(ball.fabricBall.transformMatrix,
@@ -297,7 +326,6 @@ var update = function(elapsed) {
 
 // this function can return an object with all the types of collisions
 // pass in the fabricBall
-var testVar = 25;
 var ballBrickCollision = function (ball, rect) {
     var circle = ball.fabricBall;
     var radius = circle.radius;
@@ -310,6 +338,13 @@ var ballBrickCollision = function (ball, rect) {
     // This pair of checks does not do any line intersection testing
     if (xCentersDistance > (rect.width/2 + radius)) { return false; }
     if (yCentersDistance > (rect.height/2 + radius)) { return false; }
+
+    // At this stage, the ball is almost guaranteed a collision
+    // The only case is when the ball is at a corner, but for now
+    // This can't happen because we don't have rounded rectangles yet
+    
+    // If we have a state such that the ball may be inside the brick
+    // Then this will fail to detect the collision
     
     // Line Intersection testing begins
     var ballPosX = getMatrixX(circle);
@@ -323,8 +358,6 @@ var ballBrickCollision = function (ball, rect) {
 
     debugDrawLine(ballTrajectory);
 
-    
-    
     var brickPosX = getMatrixX(rect);
     var brickPosY = getMatrixY(rect);
 
@@ -334,21 +367,21 @@ var ballBrickCollision = function (ball, rect) {
        
        TODO: replace the brick boundaries which are currently
        rectangles, with rounded rectangles. This means you
-       need circle-line segment intersection testing.
+       need circle-line segment intersection testing for corners.
     **/
 
     var topSegment = {
-	    x1: brickPosX - rect.width/2 - radius, //
-	    y1: brickPosY - rect.height/2 - radius,
-	    x2: brickPosX + rect.width/2 + radius, //
-	    y2: brickPosY - rect.height/2 - radius,
+	x1: brickPosX - rect.width/2 - radius, //
+	y1: brickPosY - rect.height/2 - radius,
+	x2: brickPosX + rect.width/2 + radius, //
+	y2: brickPosY - rect.height/2 - radius,
     };
     
     var topSegment = {
-	    x1: brickPosX - rect.width/2 - radius, //
-	    y1: brickPosY - rect.height/2 - radius,
-	    x2: brickPosX + rect.width/2 + radius, //
-	    y2: brickPosY - rect.height/2 - radius,
+	x1: brickPosX - rect.width/2 - radius, //
+	y1: brickPosY - rect.height/2 - radius,
+	x2: brickPosX + rect.width/2 + radius, //
+	y2: brickPosY - rect.height/2 - radius,
     };
 
     var botSegment = {
@@ -377,23 +410,20 @@ var ballBrickCollision = function (ball, rect) {
     debugDrawLine(leftSegment);
     debugDrawLine(rightSegment);
 
+
+    
     var intersectPt = null;
     // ball goes downwards
     if (ball.dy > 0) {
-	
-	
 	intersectPt = gameMath.intersect(ballTrajectory, topSegment);
 	if (intersectPt) {
 	    intersectPt.type = "vertical";
 	    return intersectPt;
 	}
     }
-
     
     // upwards
     if (ball.dy < 0) {
-
-
 	intersectPt = gameMath.intersect(ballTrajectory, botSegment);
 	if (intersectPt) {
 	    intersectPt.type = "vertical";
@@ -401,11 +431,7 @@ var ballBrickCollision = function (ball, rect) {
 	}
     }
 
-
-    
     if (ball.dx > 0) {
-
-	
 	intersectPt = gameMath.intersect(ballTrajectory, leftSegment);
 	if (intersectPt) {
 	    intersectPt.type = "horizontal";
@@ -414,22 +440,13 @@ var ballBrickCollision = function (ball, rect) {
     }
 
     // ball is probably going leftwards (dx < 0)
-    
-
     intersectPt = gameMath.intersect(ballTrajectory, rightSegment);
 
     if (intersectPt) {
 	intersectPt.type = "horizontal";
 	return intersectPt;
     }
-    
-    // DEBUG ONLY
-    
-    
-    canvas.remove(fabTopLine)
-	.remove(fabBotLine)
-	.remove(fabLeftLine)
-	.remove(fabRightLine);
+
     // TODO: Line segment intersections with circles
     // to catch corner cases.
     var topRightArc;
@@ -437,15 +454,6 @@ var ballBrickCollision = function (ball, rect) {
     var botLeftArc;
     var botRightArc;
 
-    
-    
-    if (testVar) {
-	testVar--;
-	// canvas.add(new fabric.Line(
-	//     [bottomSegment.x1, bottomSegment.y1,
-	//      bottomSegment.x2, bottomSegment.y2],
-	//     {fill: 'orange', stroke: "yellow", originX: 'left', originY: 'top'}));
-    }
     throw "Collision Detection doesn't catch all cases!";
 }
 
